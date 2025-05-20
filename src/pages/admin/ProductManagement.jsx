@@ -25,7 +25,8 @@ const ProductManagement = () => {
     brand: '', 
     countInStock: 0, 
     description: '',
-    image: '' 
+    image: '',
+    isFeatured: false
   });
   const [saving, setSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState('');
@@ -161,7 +162,8 @@ const ProductManagement = () => {
       brand: '', 
       countInStock: 0, 
       description: '',
-      image: '' 
+      image: '',
+      isFeatured: false
     });
     setImagePreview('');
     setShowModal(true);
@@ -205,42 +207,31 @@ const ProductManagement = () => {
     setSaving(true);
     try {
       if (modalType === 'add') {
-        // First get existing products
         const existingRes = await axios.get(`${API_BASE}/products`);
         const existingProducts = existingRes.data.products || [];
         
-        // Add new product with ID and creation date
         const newProduct = {
           ...currentProduct,
           id: Date.now().toString(),
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          isFeatured: currentProduct.isFeatured || false
         };
         
-        console.log('Saving new product:', newProduct); // Debug log
-        
-        // Update products array
         const updatedProducts = [...existingProducts, newProduct];
         
-        // Send the updated array to the API
         await axios.post(`${API_BASE}/products`, { products: updatedProducts });
       } else {
-        // For edit, get existing products
         const existingRes = await axios.get(`${API_BASE}/products`);
         const existingProducts = existingRes.data.products || [];
         
-        // Find index of product to update
         const productIndex = existingProducts.findIndex(p => p.id === currentProduct.id);
         
         if (productIndex !== -1) {
-          // Update the product in the array
           existingProducts[productIndex] = {
             ...currentProduct,
             updatedAt: new Date().toISOString()
           };
           
-          console.log('Updating product:', existingProducts[productIndex]); // Debug log
-          
-          // Send the updated array to the API
           await axios.post(`${API_BASE}/products`, { products: existingProducts });
         } else {
           throw new Error('Không tìm thấy sản phẩm để cập nhật');
@@ -248,9 +239,7 @@ const ProductManagement = () => {
       }
       
       setShowModal(false);
-      
-      // Refresh all data
-      await refreshData();
+      refreshData();
       
       alert(modalType === 'add' ? 'Thêm sản phẩm thành công!' : 'Cập nhật sản phẩm thành công!');
     } catch (err) {
@@ -367,6 +356,29 @@ const ProductManagement = () => {
     }
   };
 
+  // Toggle featured product
+  const toggleFeaturedProduct = async (productId) => {
+    try {
+      const existingRes = await axios.get(`${API_BASE}/products`);
+      const existingProducts = existingRes.data.products || [];
+      
+      const productIndex = existingProducts.findIndex(p => p.id === productId);
+      
+      if (productIndex !== -1) {
+        // Đảo ngược trạng thái nổi bật
+        existingProducts[productIndex].isFeatured = !existingProducts[productIndex].isFeatured;
+        
+        await axios.post(`${API_BASE}/products`, { products: existingProducts });
+        
+        // Làm mới danh sách sản phẩm
+        refreshData();
+      }
+    } catch (err) {
+      console.error('Lỗi khi thay đổi trạng thái nổi bật:', err);
+      alert('Không thể thay đổi trạng thái sản phẩm. Vui lòng thử lại.');
+    }
+  };
+
   // Pagination
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const paginationItems = [];
@@ -430,6 +442,7 @@ const ProductManagement = () => {
                 <th>Thương hiệu</th>
                 <th>Tồn kho</th>
                 <th>Ngày tạo</th>
+                <th>Nổi bật</th>
                 <th>Thao tác</th>
               </tr>
             </thead>
@@ -445,6 +458,14 @@ const ProductManagement = () => {
                   <td>{product.brand}</td>
                   <td>{product.countInStock}</td>
                   <td>{product.createdAt ? new Date(product.createdAt).toLocaleString() : ''}</td>
+                  <td>
+                    <Button 
+                      variant={product.isFeatured ? "success" : "secondary"}
+                      onClick={() => toggleFeaturedProduct(product.id)}
+                    >
+                      {product.isFeatured ? "Đang nổi bật" : "Đánh dấu nổi bật"}
+                    </Button>
+                  </td>
                   <td>
                     <Button size="sm" variant="warning" className="me-2" onClick={() => openEditModal(product)}>Sửa</Button>
                     <Button size="sm" variant="danger" onClick={() => handleDelete(product.id)}>Xóa</Button>
@@ -569,6 +590,18 @@ const ProductManagement = () => {
                 rows={3}
                 value={currentProduct.description}
                 onChange={(e) => setCurrentProduct({ ...currentProduct, description: e.target.value })}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Check 
+                type="checkbox"
+                label="Sản phẩm nổi bật"
+                checked={currentProduct.isFeatured || false}
+                onChange={(e) => setCurrentProduct(prev => ({
+                  ...prev, 
+                  isFeatured: e.target.checked
+                }))}
               />
             </Form.Group>
 

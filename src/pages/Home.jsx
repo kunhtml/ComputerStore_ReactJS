@@ -36,12 +36,16 @@ const Home = () => {
         const response = await axios.get(`${API_BASE}/products`);
         const allProducts = response.data.products || [];
         
-        // Lấy 5 sản phẩm ngẫu nhiên
-        const randomProducts = allProducts
+        // Lọc ra các sản phẩm được đánh dấu là nổi bật
+        const featuredProductsList = allProducts.filter(product => product.isFeatured);
+        
+        // Lấy 5 sản phẩm ngẫu nhiên cho carousel
+        const randomCarouselProducts = allProducts
           .sort(() => 0.5 - Math.random())
           .slice(0, 5);
         
-        setFeaturedProducts(randomProducts);
+        setFeaturedProducts(featuredProductsList);
+        setProducts(randomCarouselProducts);
       } catch (err) {
         console.error('Error fetching featured products:', err);
         setError('Không thể tải sản phẩm nổi bật');
@@ -115,7 +119,7 @@ const Home = () => {
               <Card.Body>
                 <div id="mainCarousel" className="homepage-main-carousel carousel slide carousel-fade" data-bs-ride="carousel">
                   <div className="carousel-inner">
-                    {featuredProducts.map((product, index) => (
+                    {products.map((product, index) => (
                       <div 
                         key={product.id} 
                         className={`carousel-item ${index === 0 ? 'active' : ''}`}
@@ -171,9 +175,9 @@ const Home = () => {
         <Message variant="danger">{error}</Message>
       ) : (
         <div className="mb-5">
-          {products && products.length > 0 ? (
+          {featuredProducts && featuredProducts.length > 0 ? (
             <Row className="owl-stage-outer">
-              {products.map((product) => (
+              {featuredProducts.map((product) => (
                 <Col
                   key={product.id}
                   sm={12}
@@ -185,11 +189,14 @@ const Home = () => {
                   <Card className="h-100">
                     <Link to={`/products/${product.id}`}>
                       <Card.Img
-                        src={product.image}
+                        src={product.image || 'https://via.placeholder.com/300x300?text=No+Image'}
                         variant="top"
                         alt={product.name}
                         className="p-3"
                         style={{ height: "200px", objectFit: "contain" }}
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/300x300?text=No+Image';
+                        }}
                       />
                     </Link>
                     <Card.Body className="d-flex flex-column">
@@ -216,12 +223,12 @@ const Home = () => {
                             />
                           ))}
                           <span className="ms-2">
-                            {product.numReviews} reviews
+                            {product.numReviews || 0} reviews
                           </span>
                         </div>
                       </Card.Text>
                       <Card.Text as="h4" className="mt-auto">
-                        ${product.price}
+                        {product.price.toLocaleString('vi-VN')}₫
                       </Card.Text>
                     </Card.Body>
                   </Card>
@@ -229,24 +236,10 @@ const Home = () => {
               ))}
             </Row>
           ) : (
-            <Message>No products found</Message>
+            <Message variant="info">Không có sản phẩm nổi bật</Message>
           )}
         </div>
       )}
-
-      {/* CTA Section */}
-      <Row className="bg-light p-5 my-5 text-center rounded">
-        <Col>
-          <h2>Need Help Choosing the Right PC?</h2>
-          <p className="lead">
-            Our experts are here to help you find the perfect computer for your
-            needs.
-          </p>
-          <Button variant="outline-primary" size="lg" as={Link} to="/contact">
-            Contact Us
-          </Button>
-        </Col>
-      </Row>
     </>
   );
 };

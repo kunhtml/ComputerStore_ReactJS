@@ -64,7 +64,8 @@
       "description": "123",
       "image": "/uploads/1747759262015-282044730.jpg",
       "id": "1747759264477",
-      "createdAt": "2025-05-20T16:41:04.477Z"
+      "createdAt": "2025-05-20T16:41:04.477Z",
+      "isFeatured": true
     }
   ],
   "orders": [

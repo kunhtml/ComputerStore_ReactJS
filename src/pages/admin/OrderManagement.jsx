@@ -151,24 +151,6 @@ const OrderManagement = () => {
         <Col><h3>Order Management</h3></Col>
       </Row>
       
-      {/* Debug info */}
-      {debugInfo && (
-        <Alert variant="info" className="mb-3">
-          <p><strong>Debug Info:</strong></p>
-          <p>Found {debugInfo.ordersCount} orders in database</p>
-          <p>Current display state: {orders.length} orders showing of {total} total</p>
-          <p>Search: "{search || 'none'}", Status filter: "{status || 'none'}", Page: {page}</p>
-          {debugInfo.ordersCount > 0 && (
-            <details>
-              <summary>Show raw order data</summary>
-              <pre style={{maxHeight: '200px', overflow: 'auto'}}>
-                {JSON.stringify(debugInfo.rawOrders, null, 2)}
-              </pre>
-            </details>
-          )}
-        </Alert>
-      )}
-
       <Row className="mb-3 g-2">
         <Col md={4}>
           <Form.Control

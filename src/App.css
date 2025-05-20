@@ -160,3 +160,8 @@ footer {
   height: 60px;
   object-fit: contain;
 }
+
+.text-muted {
+    --bs-text-opacity: 1;
+    color: rgb(255 255 255 / 75%) !important;
+}
