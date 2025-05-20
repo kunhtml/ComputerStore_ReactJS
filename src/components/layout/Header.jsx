@@ -66,8 +66,8 @@ const Header = () => {
                       <LinkContainer to="/myorders">
                         <NavDropdown.Item>My Orders</NavDropdown.Item>
                       </LinkContainer>
-                      <LinkContainer to="/myreviews">
-                        <NavDropdown.Item>Đánh Giá Của Tôi</NavDropdown.Item>
+                      <LinkContainer to="/user-reviews">
+                        <NavDropdown.Item>My Reviews</NavDropdown.Item>
                       </LinkContainer>
                       <NavDropdown.Divider />
                       <NavDropdown.Item onClick={logoutHandler}>

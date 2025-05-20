@@ -14,6 +14,7 @@ import Rating from "../components/Rating";
 import { useAppContext } from "../context/AppContext";
 import Message from "../components/Message";
 import Loader from "../components/Loader";
+import { toast } from "react-toastify";
 
 const ProductDetail = () => {
   const [qty, setQty] = useState(1);
@@ -23,11 +24,15 @@ const ProductDetail = () => {
   const [error, setError] = useState("");
   const [serverConnected, setServerConnected] = useState(false);
   const [product, setProduct] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState("");
 
-  const { userInfo } = useAppContext();
+  const { userInfo, addToCart } = useAppContext();
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // Fetch product details
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -63,8 +68,34 @@ const ProductDetail = () => {
     fetchProduct();
   }, [id]);
 
+  // Fetch reviews separately
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!id || !serverConnected) return;
+      
+      try {
+        setReviewsLoading(true);
+        setReviewsError("");
+        
+        const response = await fetch(`http://localhost:5678/api/products/${id}/reviews`);
+        const data = await response.json();
+        
+        setReviews(data.reviews || []);
+      } catch (err) {
+        setReviewsError("Failed to load reviews");
+        console.error("Error fetching reviews:", err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+    
+    fetchReviews();
+  }, [id, serverConnected]);
+
   const addToCartHandler = () => {
-    navigate(`/cart/${id}?qty=${qty}`);
+    addToCart(product, Number(qty));
+    toast.success(`${product.name} added to cart`);
+    navigate('/cart');
   };
 
   const submitHandler = async (e) => {
@@ -74,8 +105,9 @@ const ProductDetail = () => {
         name: userInfo.name,
         rating: Number(rating),
         comment,
-        createdAt: new Date().toISOString(),
+        userId: userInfo.id
       };
+      
       const response = await fetch(`http://localhost:5678/api/products/${id}/reviews`, {
         method: 'POST',
         headers: {
@@ -83,15 +115,29 @@ const ProductDetail = () => {
         },
         body: JSON.stringify(review),
       });
+      
       if (!response.ok) throw new Error('Failed to submit review');
-      // Refresh product data
-      const updated = await response.json();
-      setProduct(updated.product);
+      
+      // Get updated data
+      const data = await response.json();
+      
+      // Update product and reviews
+      if (data.product) {
+        setProduct(data.product);
+      }
+      
+      // Refresh reviews
+      const reviewsResponse = await fetch(`http://localhost:5678/api/products/${id}/reviews`);
+      const reviewsData = await reviewsResponse.json();
+      setReviews(reviewsData.reviews || []);
+      
+      // Reset form
       setRating(0);
       setComment("");
+      
       alert("Review submitted successfully");
     } catch (err) {
-      alert("Failed to submit review");
+      alert("Failed to submit review: " + (err.message || "Unknown error"));
     }
   };
 
@@ -122,7 +168,7 @@ const ProductDetail = () => {
       </Link>
       <Row>
         <Col md={6}>
-          <Image src={product.image} alt={product.name} fluid />
+          <Image src={product.image || "https://via.placeholder.com/600x400?text=No+Image"} alt={product.name} fluid />
         </Col>
         <Col md={3}>
           <ListGroup variant="flush">
@@ -131,8 +177,8 @@ const ProductDetail = () => {
             </ListGroupItem>
             <ListGroupItem>
               <Rating
-                value={product.rating}
-                text={`${product.numReviews} reviews`}
+                value={product.rating || 0}
+                text={`${product.numReviews || 0} reviews`}
               />
             </ListGroupItem>
             <ListGroupItem>Price: ${product.price}</ListGroupItem>
@@ -199,64 +245,71 @@ const ProductDetail = () => {
           </Card>
         </Col>
       </Row>
-      <Row>
+      <Row className="mt-4">
         <Col md={6}>
           <h2>Reviews</h2>
-          {(product.reviews || []).length === 0 && (
+          {reviewsLoading ? (
+            <Loader />
+          ) : reviewsError ? (
+            <Message variant="danger">{reviewsError}</Message>
+          ) : reviews.length === 0 ? (
             <Message>No Reviews</Message>
+          ) : (
+            <ListGroup variant="flush">
+              {reviews.map((review) => (
+                <ListGroupItem key={review.id}>
+                  <strong>{review.name}</strong>
+                  <Rating value={review.rating} />
+                  <p>{new Date(review.createdAt).toLocaleDateString()}</p>
+                  <p>{review.comment}</p>
+                </ListGroupItem>
+              ))}
+            </ListGroup>
           )}
-          <ListGroup variant="flush">
-            {(product.reviews || []).map((review) => (
-              <ListGroupItem key={review.createdAt}>
-                <strong>{review.name}</strong>
-                <Rating value={review.rating} />
-                <p>{review.createdAt.substring(0, 10)}</p>
-                <p>{review.comment}</p>
-              </ListGroupItem>
-            ))}
-            <ListGroupItem>
-              <h2>Write a Customer Review</h2>
-              {userInfo ? (
-                <Form onSubmit={submitHandler}>
-                  <Form.Group controlId="rating">
-                    <Form.Label>Rating</Form.Label>
-                    <Form.Control
-                      as="select"
-                      value={rating}
-                      onChange={(e) => setRating(e.target.value)}
-                    >
-                      <option value="">Select...</option>
-                      <option value="1">1 - Poor</option>
-                      <option value="2">2 - Fair</option>
-                      <option value="3">3 - Good</option>
-                      <option value="4">4 - Very Good</option>
-                      <option value="5">5 - Excellent</option>
-                    </Form.Control>
-                  </Form.Group>
-                  <Form.Group controlId="comment">
-                    <Form.Label>Comment</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      row="3"
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                    ></Form.Control>
-                  </Form.Group>
-                  <Button
-                    disabled={loading}
-                    type="submit"
-                    variant="primary"
+          
+          <ListGroupItem className="mt-4">
+            <h2>Write a Customer Review</h2>
+            {userInfo ? (
+              <Form onSubmit={submitHandler}>
+                <Form.Group controlId="rating">
+                  <Form.Label>Rating</Form.Label>
+                  <Form.Control
+                    as="select"
+                    value={rating}
+                    onChange={(e) => setRating(e.target.value)}
                   >
-                    Submit
-                  </Button>
-                </Form>
-              ) : (
-                <Message>
-                  Please <Link to="/login">sign in</Link> to write a review{" "}
-                </Message>
-              )}
-            </ListGroupItem>
-          </ListGroup>
+                    <option value="">Select...</option>
+                    <option value="1">1 - Poor</option>
+                    <option value="2">2 - Fair</option>
+                    <option value="3">3 - Good</option>
+                    <option value="4">4 - Very Good</option>
+                    <option value="5">5 - Excellent</option>
+                  </Form.Control>
+                </Form.Group>
+                <Form.Group controlId="comment">
+                  <Form.Label>Comment</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    row="3"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                  ></Form.Control>
+                </Form.Group>
+                <Button
+                  disabled={loading}
+                  type="submit"
+                  variant="primary"
+                  className="mt-3"
+                >
+                  Submit
+                </Button>
+              </Form>
+            ) : (
+              <Message>
+                Please <Link to="/login">sign in</Link> to write a review{" "}
+              </Message>
+            )}
+          </ListGroupItem>
         </Col>
       </Row>
     </div>

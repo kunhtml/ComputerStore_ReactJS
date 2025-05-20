@@ -32,6 +32,7 @@ const PlaceOrder = React.lazy(() => import('./pages/PlaceOrder'));
 const Order = React.lazy(() => import('./pages/Order'));
 const OrderList = React.lazy(() => import('./pages/OrderList'));
 const UserDashboard = React.lazy(() => import('./pages/UserDashboard'));
+const UserReviews = React.lazy(() => import('./pages/UserReviews'));
 
 // Loading component
 const Loading = () => (
@@ -186,6 +187,12 @@ function App() {
                     <PrivateRoute>
                       <OrderList />
                     </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/user-reviews"
+                  element={
+                    <PrivateRoute element={UserReviews} />
                   }
                 />
 

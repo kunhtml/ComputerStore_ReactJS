@@ -134,37 +134,122 @@ export const AppProvider = ({ children }) => {
   };
 
   // Cart actions
-  const addToCart = (product, qty) => {
-    // Sử dụng id hoặc _id của sản phẩm
+  const addToCart = async (product, qty) => {
+    // Ensure we have the product id
     const productId = product.id || product._id;
 
-    // Đảm bảo sản phẩm có id
+    // Create a product object with proper ID
     const productWithId = {
       ...product,
       id: productId,
-      product: productId, // Thêm trường product để tương thích với API
+      product: productId, // Add product field for compatibility
     };
 
     const existItem = cartItems.find(
       (x) => x.id === productId || x.product === productId
     );
 
+    let updatedCartItems;
+    
     if (existItem) {
-      setCartItems(
-        cartItems.map((x) =>
-          x.id === productId || x.product === productId
-            ? { ...x, qty: Number(qty) }
-            : x
-        )
+      updatedCartItems = cartItems.map((x) =>
+        x.id === productId || x.product === productId
+          ? { ...x, qty: Number(qty) }
+          : x
       );
     } else {
-      setCartItems([...cartItems, { ...productWithId, qty: Number(qty) }]);
+      updatedCartItems = [...cartItems, { ...productWithId, qty: Number(qty) }];
+    }
+    
+    // Update local state first for better UX
+    setCartItems(updatedCartItems);
+    
+    // Then sync with backend if user is logged in
+    if (userInfo && userInfo.id) {
+      try {
+        await fetch(`http://localhost:5678/api/cart/${userInfo.id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ items: updatedCartItems })
+        });
+      } catch (error) {
+        console.error('Error syncing cart with server:', error);
+      }
     }
   };
 
-  const removeFromCart = (id) => {
-    setCartItems(cartItems.filter((x) => x.id !== id && x.product !== id));
+  const removeFromCart = async (id) => {
+    const updatedCartItems = cartItems.filter((x) => x.id !== id && x.product !== id);
+    
+    // Update local state first
+    setCartItems(updatedCartItems);
+    
+    // Then sync with backend if user is logged in
+    if (userInfo && userInfo.id) {
+      try {
+        if (updatedCartItems.length === 0) {
+          // If cart is empty, clear the cart completely
+          await fetch(`http://localhost:5678/api/cart/${userInfo.id}`, {
+            method: 'DELETE'
+          });
+        } else {
+          // Otherwise, update the cart
+          await fetch(`http://localhost:5678/api/cart/${userInfo.id}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ items: updatedCartItems })
+          });
+        }
+      } catch (error) {
+        console.error('Error syncing cart with server:', error);
+      }
+    }
   };
+
+  const clearCart = async () => {
+    // Clear cart locally
+    setCartItems([]);
+    localStorage.removeItem('cartItems');
+    
+    // Clear cart on the server if user is logged in
+    if (userInfo && userInfo.id) {
+      try {
+        await fetch(`http://localhost:5678/api/cart/${userInfo.id}`, {
+          method: 'DELETE'
+        });
+      } catch (error) {
+        console.error('Error clearing cart on server:', error);
+      }
+    }
+  };
+
+  // Fetch user's cart from the server when logged in
+  const fetchUserCart = async () => {
+    if (!userInfo || !userInfo.id) return;
+    
+    try {
+      const response = await fetch(`http://localhost:5678/api/cart/${userInfo.id}`);
+      const data = await response.json();
+      
+      if (data.cart && data.cart.items) {
+        setCartItems(data.cart.items);
+        localStorage.setItem('cartItems', JSON.stringify(data.cart.items));
+      }
+    } catch (error) {
+      console.error('Error fetching user cart:', error);
+    }
+  };
+
+  // Fetch cart when user logs in
+  useEffect(() => {
+    if (userInfo && userInfo.id) {
+      fetchUserCart();
+    }
+  }, [userInfo]);
 
   const saveShippingAddress = (data) => {
     setShippingAddress(data);
@@ -195,10 +280,16 @@ export const AppProvider = ({ children }) => {
     // Cart state and actions
     cartItems,
     setCartItems,
+    addToCart,
+    removeFromCart,
+    clearCart,
+    fetchUserCart,
     shippingAddress,
     setShippingAddress,
     paymentMethod,
     setPaymentMethod,
+    saveShippingAddress,
+    savePaymentMethod,
   };
 
   return (

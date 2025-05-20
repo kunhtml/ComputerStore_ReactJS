@@ -14,6 +14,9 @@ import Loader from '../components/Loader';
 import { PayPalButton } from 'react-paypal-button-v2';
 import { toast } from 'react-toastify';
 
+const API_BASE = 'http://localhost:5678/api';
+const REFRESH_INTERVAL = 30000; // Refresh every 30 seconds
+
 const Order = () => {
   const { id: orderId } = useParams();
   const navigate = useNavigate();
@@ -25,44 +28,67 @@ const Order = () => {
   const [loadingDeliver, setLoadingDeliver] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
+  const [lastRefresh, setLastRefresh] = useState(new Date().toLocaleTimeString());
 
   // Calculate prices
   const addDecimals = (num) => {
     return (Math.round(num * 100) / 100).toFixed(2);
   };
 
-  useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        setLoading(true);
-        // Get user info from localStorage
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null');
-        setUserInfo(userInfo);
+  const fetchOrder = async () => {
+    try {
+      setLoading(loading => loading); // Only keep true on initial load
+      // Get user info from localStorage
+      const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null');
+      setUserInfo(userInfo);
 
-        if (!userInfo) {
-          navigate('/login');
-          return;
+      if (!userInfo) {
+        navigate('/login');
+        return;
+      }
+
+      // Fetch order from API
+      const response = await fetch(`${API_BASE}/orders/${orderId}`);
+      
+      if (response.ok) {
+        const orderData = await response.json();
+        if (orderData.order) {
+          setOrder(orderData.order);
+          setLastRefresh(new Date().toLocaleTimeString());
+        } else {
+          setError('Order not found');
         }
-
-        // Fetch order from API
-        const response = await fetch('http://localhost:5678/api/database');
+      } else {
+        // Fallback to old method if the new endpoint fails
+        const response = await fetch(`${API_BASE}/database`);
         const data = await response.json();
         const orderData = data.orders?.find(o => o.id === orderId);
         
         if (orderData) {
           setOrder(orderData);
+          setLastRefresh(new Date().toLocaleTimeString());
         } else {
           setError('Order not found');
         }
-      } catch (err) {
-        console.error('Error fetching order:', err);
-        setError('Error loading order');
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching order:', err);
+      setError('Error loading order');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchOrder();
+    
+    // Set up auto-refresh interval
+    const intervalId = setInterval(() => {
+      fetchOrder();
+    }, REFRESH_INTERVAL);
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
   }, [orderId, navigate]);
 
   // Load PayPal script
@@ -236,14 +262,17 @@ const Order = () => {
         <Loader />
       ) : error ? (
         <Message variant='danger'>{error}</Message>
-      ) : order ? (
+      ) : !order ? (
+        <Message variant='danger'>Order not found</Message>
+      ) : (
         <>
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h1>Order {orderId}</h1>
+            <h1>Order {order.id}</h1>
             <Button variant="secondary" onClick={() => navigate(-1)}>
               <i className="fas fa-arrow-left me-2"></i>Back
             </Button>
           </div>
+          <p className="text-muted small">Status updates automatically every 30 seconds. Last updated: {lastRefresh}</p>
           {order.status && (
             <Message variant={order.status === 'Pending' ? 'warning' : order.status === 'Paid' ? 'success' : 'info'}>
               Order Status: {order.status}
@@ -259,19 +288,30 @@ const Order = () => {
                   </p>
                   <p>
                     <strong>Email: </strong>{' '}
-                    <a href={`mailto:${order.userEmail}`}>
+                    <a href={`mailto:${order.userEmail || ''}`}>
                       {order.userEmail || 'N/A'}
                     </a>
                   </p>
                   <p>
-                    <strong>Address:</strong>
-                    {order.shippingAddress.address}, {order.shippingAddress.city}{' '}
-                    {order.shippingAddress.postalCode},{' '}
-                    {order.shippingAddress.country}
+                    <strong>Address: </strong>
+                    {order.shippingAddress?.address}, {order.shippingAddress?.city}{' '}
+                    {order.shippingAddress?.postalCode},{' '}
+                    {order.shippingAddress?.country}
+                  </p>
+                  <p>
+                    <strong>Status: </strong>
+                    <span className={`badge bg-${
+                      order.status?.toLowerCase() === 'delivered' ? 'success' :
+                      order.status?.toLowerCase() === 'shipped' ? 'primary' :
+                      order.status?.toLowerCase() === 'processing' ? 'info' :
+                      order.status?.toLowerCase() === 'cancelled' ? 'danger' : 'warning'
+                    }`}>
+                      {order.status || 'Pending'}
+                    </span>
                   </p>
                   {order.isDelivered ? (
                     <Message variant='success'>
-                      Delivered on {order.deliveredAt}
+                      Delivered on {new Date(order.deliveredAt).toLocaleDateString()}
                     </Message>
                   ) : (
                     <Message variant='danger'>Not Delivered</Message>
@@ -282,10 +322,12 @@ const Order = () => {
                   <h2>Payment Method</h2>
                   <p>
                     <strong>Method: </strong>
-                    {order.paymentMethod}
+                    {order.paymentMethod || 'Not specified'}
                   </p>
                   {order.isPaid ? (
-                    <Message variant='success'>Paid on {order.paidAt}</Message>
+                    <Message variant='success'>
+                      Paid on {new Date(order.paidAt).toLocaleDateString()}
+                    </Message>
                   ) : (
                     <Message variant='danger'>Not Paid</Message>
                   )}
@@ -293,7 +335,7 @@ const Order = () => {
 
                 <ListGroupItem>
                   <h2>Order Items</h2>
-                  {order.orderItems.length === 0 ? (
+                  {(!order.orderItems || order.orderItems.length === 0) ? (
                     <Message>Order is empty</Message>
                   ) : (
                     <ListGroup variant='flush'>
@@ -302,7 +344,7 @@ const Order = () => {
                           <Row>
                             <Col md={1}>
                               <Image
-                                src={item.image}
+                                src={item.image || '/images/placeholder.png'}
                                 alt={item.name}
                                 fluid
                                 rounded
@@ -314,7 +356,7 @@ const Order = () => {
                               </Link>
                             </Col>
                             <Col md={4}>
-                              {item.qty} x ${item.price} = ${item.qty * item.price}
+                              {item.qty} x ${item.price} = ${(item.qty * item.price).toFixed(2)}
                             </Col>
                           </Row>
                         </ListGroupItem>
@@ -398,8 +440,6 @@ const Order = () => {
             </Col>
           </Row>
         </>
-      ) : (
-        <Message variant='danger'>Order not found</Message>
       )}
     </>
   );

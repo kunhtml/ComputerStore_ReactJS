@@ -49,9 +49,75 @@
           "createdAt": "2025-05-20T14:49:43.088Z",
           "id": "1747752583088"
         }
-      ]
+      ],
+      "rating": 5,
+      "numReviews": 2
     }
   ],
-  "orders": [],
-  "reviews": []
+  "orders": [
+    {
+      "id": "1747754363305",
+      "userId": "1747751610706",
+      "userName": "max",
+      "userEmail": "max@example.com",
+      "orderItems": [
+        {
+          "name": "test1",
+          "price": 11111,
+          "category": "All In One",
+          "brand": "DELL",
+          "countInStock": 1,
+          "description": "test1",
+          "id": "1747750795202",
+          "createdAt": "2025-05-20T14:19:55.202Z",
+          "reviews": [
+            {
+              "name": "max",
+              "rating": 5,
+              "comment": "",
+              "createdAt": "2025-05-20T14:49:43.088Z",
+              "id": "1747752583088"
+            }
+          ],
+          "rating": 5,
+          "numReviews": 2,
+          "product": "1747750795202",
+          "qty": 1
+        }
+      ],
+      "shippingAddress": {},
+      "paymentMethod": "",
+      "itemsPrice": "11111.00",
+      "shippingPrice": "0.00",
+      "taxPrice": "1666.65",
+      "totalPrice": "12777.65",
+      "isPaid": false,
+      "paidAt": null,
+      "isDelivered": false,
+      "deliveredAt": null,
+      "status": "Delivered",
+      "createdAt": "2025-05-20T15:19:23.305Z"
+    }
+  ],
+  "reviews": [
+    {
+      "name": "max",
+      "rating": 5,
+      "comment": "",
+      "userId": "1747751610706",
+      "productId": "1747750795202",
+      "id": "1747752876021",
+      "createdAt": "2025-05-20T14:54:36.021Z"
+    },
+    {
+      "name": "max",
+      "rating": 5,
+      "comment": "123",
+      "userId": "1747751610706",
+      "productId": "1747750795202",
+      "id": "1747752881051",
+      "createdAt": "2025-05-20T14:54:41.051Z"
+    }
+  ],
+  "carts": []
 }

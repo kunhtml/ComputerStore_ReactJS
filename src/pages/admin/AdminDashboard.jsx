@@ -128,8 +128,8 @@ const AdminDashboard = () => {
                       {stats.recentOrders.map((order) => (
                         <tr key={order.id}>
                           <td>{order.id}</td>
-                          <td>{order.user?.name || 'N/A'}</td>
-                          <td>${order.total ? order.total.toFixed(2) : '0.00'}</td>
+                          <td>{order.userName || order.user?.name || 'N/A'}</td>
+                          <td>${order.total ? parseFloat(order.total).toFixed(2) : '0.00'}</td>
                           <td>
                             <span className={`badge bg-${getStatusColor(order.status)}`}>
                               {order.status}

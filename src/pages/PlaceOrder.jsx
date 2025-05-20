@@ -4,18 +4,13 @@ import { Button, Row, Col, ListGroup, Image, Card, ListGroupItem } from 'react-b
 import Message from '../components/Message';
 import CheckoutSteps from '../components/CheckoutSteps';
 import { toast } from 'react-toastify';
+import { useAppContext } from '../context/AppContext';
 
 const PlaceOrder = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Get cart items from localStorage
-  const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
-  // Get shipping address from localStorage
-  const shippingAddress = JSON.parse(localStorage.getItem('shippingAddress') || '{}');
-  // Get payment method from localStorage
-  const paymentMethod = JSON.parse(localStorage.getItem('paymentMethod') || '"PayPal"');
+  const { cartItems, clearCart, userInfo, shippingAddress, paymentMethod } = useAppContext();
 
   // Calculate prices
   const addDecimals = (num) => {
@@ -34,12 +29,16 @@ const PlaceOrder = () => {
     Number(taxPrice)
   ).toFixed(2);
 
+  // Redirect if cart is empty
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      navigate('/cart');
+    }
+  }, [cartItems, navigate]);
+
   const placeOrderHandler = async () => {
     try {
       setLoading(true);
-      
-      // Get user info from localStorage
-      const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null');
       
       if (!userInfo) {
         navigate('/login');
@@ -81,7 +80,7 @@ const PlaceOrder = () => {
       }
       
       // Clear the cart
-      localStorage.removeItem('cartItems');
+      clearCart();
       
       // Show success message
       toast.success('Order placed successfully! Your order is pending confirmation.');
@@ -131,7 +130,7 @@ const PlaceOrder = () => {
                           <Image src={item.image} alt={item.name} fluid rounded />
                         </Col>
                         <Col>
-                          <Link to={`/product/${item.product}`}>{item.name}</Link>
+                          <Link to={`/products/${item.product || item.id}`}>{item.name}</Link>
                         </Col>
                         <Col md={4}>
                           {item.qty} x ${item.price} = ${(item.qty * item.price).toFixed(2)}
@@ -178,7 +177,7 @@ const PlaceOrder = () => {
                 {error && <Message variant='danger'>{error}</Message>}
                 <Button
                   type='button'
-                  className='btn-block'
+                  className='btn-block w-100'
                   disabled={cartItems.length === 0 || loading}
                   onClick={placeOrderHandler}
                 >

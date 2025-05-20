@@ -24,7 +24,7 @@ import PaymentMethod from "./pages/PaymentMethod";
 import PlaceOrder from "./pages/PlaceOrder";
 import Order from "./pages/Order";
 import OrderList from "./pages/OrderList";
-import MyReviews from "./pages/MyReviews";
+import UserReviews from "./pages/UserReviews";
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProductManagement from './pages/admin/ProductManagement';
@@ -119,10 +119,10 @@ function App() {
               }
             />
             <Route
-              path="/myreviews"
+              path="/user-reviews"
               element={
                 <PrivateRoute>
-                  <MyReviews />
+                  <UserReviews />
                 </PrivateRoute>
               }
             />

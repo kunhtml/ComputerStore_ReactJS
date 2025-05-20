@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const { readDatabase, writeDatabase, databasePath } = require('./utils/database');
 
 const app = express();
 const PORT = process.env.PORT || 5678;
@@ -11,40 +12,8 @@ const PORT = process.env.PORT || 5678;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Đường dẫn đến file database.json
-const databasePath = path.join(__dirname, "src", "data", "database.json");
+// Log database path
 console.log("Database path:", databasePath);
-
-// Hàm đọc dữ liệu từ database.json
-const readDatabase = () => {
-  try {
-    const data = fs.readFileSync(databasePath, "utf8");
-    return JSON.parse(data);
-  } catch (error) {
-    console.error("Error reading database:", error);
-    return null;
-  }
-};
-
-// Hàm ghi dữ liệu vào database.json
-const writeDatabase = (data) => {
-  try {
-    // Kiểm tra xem thư mục có tồn tại không
-    const dirPath = path.dirname(databasePath);
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
-      console.log(`Created directory: ${dirPath}`);
-    }
-
-    // Ghi dữ liệu vào file
-    fs.writeFileSync(databasePath, JSON.stringify(data, null, 2), "utf8");
-    console.log(`Successfully wrote to database.json: ${databasePath}`);
-    return true;
-  } catch (error) {
-    console.error("Error writing database:", error);
-    return false;
-  }
-};
 
 // API endpoint để kiểm tra kết nối
 app.get("/api/ping", (req, res) => {
@@ -135,48 +104,9 @@ app.post("/api/products", (req, res) => {
 
 // Moved to users routes
 
-// API endpoint để lấy và lưu orders
-app.get("/api/orders", (req, res) => {
-  const data = readDatabase();
-  if (!data) {
-    return res.status(500).json({ error: "Failed to read database" });
-  }
+// Legacy API endpoint removed - now handled by ordersRoute
 
-  // Trả về danh sách orders
-  res.json(data.orders || []);
-});
-
-app.post("/api/orders", (req, res) => {
-  const { order, orders } = req.body;
-
-  const data = readDatabase();
-  if (!data) {
-    return res.status(500).json({ error: "Failed to read database" });
-  }
-
-  // Khởi tạo mảng orders nếu chưa có
-  if (!data.orders) {
-    data.orders = [];
-  }
-
-  // Kiểm tra xem có cập nhật cả danh sách đơn hàng hay chỉ thêm đơn hàng mới
-  if (orders && Array.isArray(orders)) {
-    // Cập nhật toàn bộ danh sách đơn hàng
-    data.orders = orders;
-  } else if (order) {
-    // Thêm order mới vào danh sách
-    data.orders.push(order);
-  } else {
-    return res.status(400).json({ error: "Invalid order data" });
-  }
-
-  // Ghi dữ liệu vào file
-  if (writeDatabase(data)) {
-    res.json({ success: true, orders: data.orders });
-  } else {
-    res.status(500).json({ error: "Failed to write database" });
-  }
-});
+// Legacy post API endpoint removed - now handled by ordersRoute
 
 // API endpoint for dashboard statistics
 app.get("/api/dashboard/stats", (req, res) => {
@@ -206,7 +136,7 @@ app.get("/api/dashboard/stats", (req, res) => {
         .slice(0, 5)
         .map(order => ({
           ...order,
-          total: order.total || 0,
+          total: order.totalPrice || order.total || 0,
           status: order.status || 'pending',
           createdAt: order.createdAt || new Date().toISOString()
         }))
@@ -257,6 +187,14 @@ app.use('/api/categories', categoriesRoute);
 
 const brandsRoute = require('./routes/brands');
 app.use('/api/brands', brandsRoute);
+
+// Add cart routes
+const cartRoute = require('./routes/cart');
+app.use('/api/cart', cartRoute);
+
+// Add route for fetching all reviews
+const allReviewsRoute = require('./routes/allReviews');
+app.use('/api/reviews', allReviewsRoute);
 
 // API endpoint để lấy products
 app.get("/api/products", (req, res) => {
