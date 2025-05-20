@@ -133,6 +133,73 @@ app.post("/api/products", (req, res) => {
   }
 });
 
+// API endpoint để lưu users
+app.post("/api/users", (req, res) => {
+  const { users } = req.body;
+
+  if (!users || !Array.isArray(users)) {
+    return res.status(400).json({ error: "Invalid users data" });
+  }
+
+  const data = readDatabase();
+  if (!data) {
+    return res.status(500).json({ error: "Failed to read database" });
+  }
+
+  // Cập nhật users
+  data.users = users;
+
+  // Ghi dữ liệu vào file
+  if (writeDatabase(data)) {
+    res.json({ success: true, users });
+  } else {
+    res.status(500).json({ error: "Failed to write database" });
+  }
+});
+
+// API endpoint để lấy và lưu orders
+app.get("/api/orders", (req, res) => {
+  const data = readDatabase();
+  if (!data) {
+    return res.status(500).json({ error: "Failed to read database" });
+  }
+
+  // Trả về danh sách orders
+  res.json(data.orders || []);
+});
+
+app.post("/api/orders", (req, res) => {
+  const { order, orders } = req.body;
+
+  const data = readDatabase();
+  if (!data) {
+    return res.status(500).json({ error: "Failed to read database" });
+  }
+
+  // Khởi tạo mảng orders nếu chưa có
+  if (!data.orders) {
+    data.orders = [];
+  }
+
+  // Kiểm tra xem có cập nhật cả danh sách đơn hàng hay chỉ thêm đơn hàng mới
+  if (orders && Array.isArray(orders)) {
+    // Cập nhật toàn bộ danh sách đơn hàng
+    data.orders = orders;
+  } else if (order) {
+    // Thêm order mới vào danh sách
+    data.orders.push(order);
+  } else {
+    return res.status(400).json({ error: "Invalid order data" });
+  }
+
+  // Ghi dữ liệu vào file
+  if (writeDatabase(data)) {
+    res.json({ success: true, orders: data.orders });
+  } else {
+    res.status(500).json({ error: "Failed to write database" });
+  }
+});
+
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, "build")));
 

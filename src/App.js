@@ -32,6 +32,7 @@ import UserEdit from "./pages/admin/UserEdit";
 import ProductList from "./pages/admin/ProductList";
 import ProductEdit from "./pages/admin/ProductEdit";
 import OrderListAdmin from "./pages/admin/OrderList";
+import ReviewList from "./pages/admin/ReviewList";
 
 // Private Route Components
 import PrivateRoute from "./components/PrivateRoute";
@@ -162,6 +163,14 @@ function App() {
               element={
                 <AdminRoute>
                   <ProductEdit />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/reviewlist"
+              element={
+                <AdminRoute>
+                  <ReviewList />
                 </AdminRoute>
               }
             />

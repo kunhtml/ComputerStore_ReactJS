@@ -45,10 +45,10 @@ const Order = () => {
           return;
         }
 
-        // Fetch order from database.json
-        const response = await fetch('/database.json');
+        // Fetch order from API
+        const response = await fetch('http://localhost:5678/api/database');
         const data = await response.json();
-        const orderData = data.orders?.find(o => o._id === orderId);
+        const orderData = data.orders?.find(o => o.id === orderId);
         
         if (orderData) {
           setOrder(orderData);
@@ -93,20 +93,38 @@ const Order = () => {
     try {
       setLoadingPay(true);
       
-      // In a real app, you would make an API call to update the order status
-      // For demo purposes, we'll just update the local state
-      const updatedOrder = { 
-        ...order, 
-        isPaid: true, 
-        paidAt: new Date().toISOString(),
-        paymentResult 
-      };
+      // Fetch all orders
+      const response = await fetch('http://localhost:5678/api/database');
+      const data = await response.json();
+      const orders = data.orders || [];
       
-      // Update local state
+      // Find the current order and update it
+      const updatedOrders = orders.map(o => {
+        if (o.id === orderId) {
+          return { 
+            ...o, 
+            isPaid: true, 
+            paidAt: new Date().toISOString(),
+            paymentResult,
+            status: 'Paid'
+          };
+        }
+        return o;
+      });
+      
+      // Save updated orders to database
+      await fetch('http://localhost:5678/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orders: updatedOrders }),
+      });
+      
+      // Find the updated order to set in state
+      const updatedOrder = updatedOrders.find(o => o.id === orderId);
       setOrder(updatedOrder);
       
-      // In a real app, you would also update the order in the database
-      // For demo, we'll just show a success message
       toast.success('Payment successful!');
     } catch (err) {
       console.error('Error processing payment:', err);
@@ -124,19 +142,37 @@ const Order = () => {
     try {
       setLoadingDeliver(true);
       
-      // In a real app, you would make an API call to update the order status
-      // For demo purposes, we'll just update the local state
-      const updatedOrder = { 
-        ...order, 
-        isDelivered: true, 
-        deliveredAt: new Date().toISOString() 
-      };
+      // Fetch all orders
+      const response = await fetch('http://localhost:5678/api/database');
+      const data = await response.json();
+      const orders = data.orders || [];
       
-      // Update local state
+      // Find the current order and update it
+      const updatedOrders = orders.map(o => {
+        if (o.id === orderId) {
+          return { 
+            ...o, 
+            isDelivered: true, 
+            deliveredAt: new Date().toISOString(),
+            status: 'Delivered'
+          };
+        }
+        return o;
+      });
+      
+      // Save updated orders to database
+      await fetch('http://localhost:5678/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orders: updatedOrders }),
+      });
+      
+      // Find the updated order to set in state
+      const updatedOrder = updatedOrders.find(o => o.id === orderId);
       setOrder(updatedOrder);
       
-      // In a real app, you would also update the order in the database
-      // For demo, we'll just show a success message
       toast.success('Order marked as delivered');
     } catch (err) {
       console.error('Error updating delivery status:', err);
@@ -146,148 +182,226 @@ const Order = () => {
     }
   };
 
-  return loading ? (
-    <Loader />
-  ) : error ? (
-    <Message variant='danger'>{error}</Message>
-  ) : (
+  // Function for admin to mark order as paid
+  const markAsPaidHandler = async () => {
+    if (!window.confirm('Are you sure you want to mark this order as paid?')) {
+      return;
+    }
+    
+    try {
+      setLoadingPay(true);
+      
+      // Fetch all orders
+      const response = await fetch('http://localhost:5678/api/database');
+      const data = await response.json();
+      const orders = data.orders || [];
+      
+      // Find the current order and update it
+      const updatedOrders = orders.map(o => {
+        if (o.id === orderId) {
+          return { 
+            ...o, 
+            isPaid: true, 
+            paidAt: new Date().toISOString(),
+            status: 'Paid'
+          };
+        }
+        return o;
+      });
+      
+      // Save updated orders to database
+      await fetch('http://localhost:5678/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orders: updatedOrders }),
+      });
+      
+      // Find the updated order to set in state
+      const updatedOrder = updatedOrders.find(o => o.id === orderId);
+      setOrder(updatedOrder);
+      
+      toast.success('Order marked as paid');
+    } catch (err) {
+      console.error('Error marking as paid:', err);
+      toast.error('Error marking as paid. Please try again.');
+    } finally {
+      setLoadingPay(false);
+    }
+  };
+
+  return (
     <>
-      <h1>Order {order._id}</h1>
-      <Row>
-        <Col md={8}>
-          <ListGroup variant='flush'>
-            <ListGroupItem>
-              <h2>Shipping</h2>
-              <p>
-                <strong>Name: </strong> {order.user.name}
-              </p>
-              <p>
-                <strong>Email: </strong>{' '}
-                <a href={`mailto:${order.user.email}`}>{order.user.email}</a>
-              </p>
-              <p>
-                <strong>Address:</strong>
-                {order.shippingAddress.address}, {order.shippingAddress.city}{' '}
-                {order.shippingAddress.postalCode},{' '}
-                {order.shippingAddress.country}
-              </p>
-              {order.isDelivered ? (
-                <Message variant='success'>
-                  Delivered on {order.deliveredAt}
-                </Message>
-              ) : (
-                <Message variant='danger'>Not Delivered</Message>
-              )}
-            </ListGroupItem>
-
-            <ListGroupItem>
-              <h2>Payment Method</h2>
-              <p>
-                <strong>Method: </strong>
-                {order.paymentMethod}
-              </p>
-              {order.isPaid ? (
-                <Message variant='success'>Paid on {order.paidAt}</Message>
-              ) : (
-                <Message variant='danger'>Not Paid</Message>
-              )}
-            </ListGroupItem>
-
-            <ListGroupItem>
-              <h2>Order Items</h2>
-              {order.orderItems.length === 0 ? (
-                <Message>Order is empty</Message>
-              ) : (
-                <ListGroup variant='flush'>
-                  {order.orderItems.map((item, index) => (
-                    <ListGroupItem key={index}>
-                      <Row>
-                        <Col md={1}>
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            fluid
-                            rounded
-                          />
-                        </Col>
-                        <Col>
-                          <Link to={`/product/${item.product}`}>
-                            {item.name}
-                          </Link>
-                        </Col>
-                        <Col md={4}>
-                          {item.qty} x ${item.price} = ${item.qty * item.price}
-                        </Col>
-                      </Row>
-                    </ListGroupItem>
-                  ))}
-                </ListGroup>
-              )}
-            </ListGroupItem>
-          </ListGroup>
-        </Col>
-        <Col md={4}>
-          <Card>
-            <ListGroup variant='flush'>
-              <ListGroupItem>
-                <h2>Order Summary</h2>
-              </ListGroupItem>
-              <ListGroupItem>
-                <Row>
-                  <Col>Items</Col>
-                  <Col>${order.itemsPrice}</Col>
-                </Row>
-              </ListGroupItem>
-              <ListGroupItem>
-                <Row>
-                  <Col>Shipping</Col>
-                  <Col>${order.shippingPrice}</Col>
-                </Row>
-              </ListGroupItem>
-              <ListGroupItem>
-                <Row>
-                  <Col>Tax</Col>
-                  <Col>${order.taxPrice}</Col>
-                </Row>
-              </ListGroupItem>
-              <ListGroupItem>
-                <Row>
-                  <Col>Total</Col>
-                  <Col>${order.totalPrice}</Col>
-                </Row>
-              </ListGroupItem>
-              {!order.isPaid && (
+      {loading ? (
+        <Loader />
+      ) : error ? (
+        <Message variant='danger'>{error}</Message>
+      ) : order ? (
+        <>
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h1>Order {orderId}</h1>
+            <Button variant="secondary" onClick={() => navigate(-1)}>
+              <i className="fas fa-arrow-left me-2"></i>Back
+            </Button>
+          </div>
+          {order.status && (
+            <Message variant={order.status === 'Pending' ? 'warning' : order.status === 'Paid' ? 'success' : 'info'}>
+              Order Status: {order.status}
+            </Message>
+          )}
+          <Row>
+            <Col md={8}>
+              <ListGroup variant='flush'>
                 <ListGroupItem>
-                  {loadingPay && <Loader />}
-                  {!sdkReady ? (
-                    <Loader />
+                  <h2>Shipping</h2>
+                  <p>
+                    <strong>Name: </strong> {order.userName || 'N/A'}
+                  </p>
+                  <p>
+                    <strong>Email: </strong>{' '}
+                    <a href={`mailto:${order.userEmail}`}>
+                      {order.userEmail || 'N/A'}
+                    </a>
+                  </p>
+                  <p>
+                    <strong>Address:</strong>
+                    {order.shippingAddress.address}, {order.shippingAddress.city}{' '}
+                    {order.shippingAddress.postalCode},{' '}
+                    {order.shippingAddress.country}
+                  </p>
+                  {order.isDelivered ? (
+                    <Message variant='success'>
+                      Delivered on {order.deliveredAt}
+                    </Message>
                   ) : (
-                    <PayPalButton
-                      amount={order.totalPrice}
-                      onSuccess={successPaymentHandler}
-                    />
+                    <Message variant='danger'>Not Delivered</Message>
                   )}
                 </ListGroupItem>
-              )}
-              {loadingDeliver && <Loader />}
-              {userInfo &&
-                userInfo.isAdmin &&
-                order.isPaid &&
-                !order.isDelivered && (
+
+                <ListGroupItem>
+                  <h2>Payment Method</h2>
+                  <p>
+                    <strong>Method: </strong>
+                    {order.paymentMethod}
+                  </p>
+                  {order.isPaid ? (
+                    <Message variant='success'>Paid on {order.paidAt}</Message>
+                  ) : (
+                    <Message variant='danger'>Not Paid</Message>
+                  )}
+                </ListGroupItem>
+
+                <ListGroupItem>
+                  <h2>Order Items</h2>
+                  {order.orderItems.length === 0 ? (
+                    <Message>Order is empty</Message>
+                  ) : (
+                    <ListGroup variant='flush'>
+                      {order.orderItems.map((item, index) => (
+                        <ListGroupItem key={index}>
+                          <Row>
+                            <Col md={1}>
+                              <Image
+                                src={item.image}
+                                alt={item.name}
+                                fluid
+                                rounded
+                              />
+                            </Col>
+                            <Col>
+                              <Link to={`/product/${item.product}`}>
+                                {item.name}
+                              </Link>
+                            </Col>
+                            <Col md={4}>
+                              {item.qty} x ${item.price} = ${item.qty * item.price}
+                            </Col>
+                          </Row>
+                        </ListGroupItem>
+                      ))}
+                    </ListGroup>
+                  )}
+                </ListGroupItem>
+              </ListGroup>
+            </Col>
+            <Col md={4}>
+              <Card>
+                <ListGroup variant='flush'>
                   <ListGroupItem>
-                    <Button
-                      type='button'
-                      className='btn btn-block'
-                      onClick={deliverHandler}
-                    >
-                      Mark As Delivered
-                    </Button>
+                    <h2>Order Summary</h2>
+                    <ListGroup variant='flush'>
+                      <ListGroupItem>
+                        <Row>
+                          <Col>Items:</Col>
+                          <Col>${order.itemsPrice}</Col>
+                        </Row>
+                      </ListGroupItem>
+                      <ListGroupItem>
+                        <Row>
+                          <Col>Shipping:</Col>
+                          <Col>${order.shippingPrice}</Col>
+                        </Row>
+                      </ListGroupItem>
+                      <ListGroupItem>
+                        <Row>
+                          <Col>Tax:</Col>
+                          <Col>${order.taxPrice}</Col>
+                        </Row>
+                      </ListGroupItem>
+                      <ListGroupItem>
+                        <Row>
+                          <Col>Total:</Col>
+                          <Col>${order.totalPrice}</Col>
+                        </Row>
+                      </ListGroupItem>
+                      {!order.isPaid && (
+                        <ListGroupItem>
+                          {loadingPay && <Loader />}
+                          {!sdkReady ? (
+                            <Loader />
+                          ) : (
+                            <PayPalButton
+                              amount={order.totalPrice}
+                              onSuccess={successPaymentHandler}
+                            />
+                          )}
+                        </ListGroupItem>
+                      )}
+                      {userInfo && userInfo.isAdmin && !order.isPaid && (
+                        <ListGroupItem>
+                          <Button
+                            type='button'
+                            className='btn btn-block w-100 mb-2'
+                            variant="success"
+                            onClick={markAsPaidHandler}
+                          >
+                            Mark As Paid
+                          </Button>
+                        </ListGroupItem>
+                      )}
+                      {userInfo && userInfo.isAdmin && order.isPaid && !order.isDelivered && (
+                        <ListGroupItem>
+                          {loadingDeliver && <Loader />}
+                          <Button
+                            type='button'
+                            className='btn btn-block w-100'
+                            onClick={deliverHandler}
+                          >
+                            Mark As Delivered
+                          </Button>
+                        </ListGroupItem>
+                      )}
+                    </ListGroup>
                   </ListGroupItem>
-                )}
-            </ListGroup>
-          </Card>
-        </Col>
-      </Row>
+                </ListGroup>
+              </Card>
+            </Col>
+          </Row>
+        </>
+      ) : (
+        <Message variant='danger'>Order not found</Message>
+      )}
     </>
   );
 };

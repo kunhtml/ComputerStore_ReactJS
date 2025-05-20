@@ -149,7 +149,7 @@ const ProductEdit = () => {
       // Chuẩn bị dữ liệu sản phẩm
       const productData = {
         name,
-        price: Number(price),
+        price: Number(parseFloat(price).toFixed(2)), // Ensure consistent price format
         image,
         brand,
         category,
@@ -200,12 +200,24 @@ const ProductEdit = () => {
               </Form.Group>
 
               <Form.Group controlId="price" className="mb-3">
-                <Form.Label>Price</Form.Label>
+                <Form.Label>Price (${price})</Form.Label>
                 <Form.Control
-                  type="number"
-                  placeholder="Enter price"
+                  type="range"
+                  min="0"
+                  max="5000"
+                  step="100"
                   value={price}
-                  onChange={(e) => setPrice(e.target.value)}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  required
+                />
+                <Form.Control 
+                  type="number" 
+                  placeholder="Enter exact price" 
+                  value={price} 
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  min="0"
+                  step="0.01"
+                  className="mt-2"
                   required
                 />
               </Form.Group>

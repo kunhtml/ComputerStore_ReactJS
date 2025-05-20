@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col, Card, Alert } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import { FaUser, FaEnvelope, FaLock, FaCheck, FaTimes, FaArrowLeft } from 'react-icons/fa';
 import axios from '../../services/axiosConfig';
 
 const UserEdit = () => {
@@ -27,10 +28,10 @@ const UserEdit = () => {
           return;
         }
 
-        // Fetch user data from database.json
-        const response = await fetch('/database.json');
+        // Fetch user data from server API
+        const response = await fetch('http://localhost:5678/api/database');
         const data = await response.json();
-        const user = data.users?.find(u => u.id === userId);
+        const user = data.users?.find(u => u.id === parseInt(userId));
         
         if (user) {
           setName(user.name);
@@ -39,7 +40,6 @@ const UserEdit = () => {
         } else {
           setError('User not found');
         }
-        setIsAdmin(data.isAdmin);
         setLoading(false);
       } catch (error) {
         toast.error('Error fetching user');
@@ -47,43 +47,71 @@ const UserEdit = () => {
       }
     };
 
-    if (userInfo && userInfo.isAdmin) {
-      fetchUser();
-    } else {
-      navigate('/login');
-    }
-  }, [userId, userInfo, navigate]);
+    fetchUser();
+  }, [userId, navigate]);
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    
     try {
-      // Get current users from database.json
-      const response = await fetch('/database.json');
+      setLoading(true);
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        toast.error('Please enter a valid email address');
+        setLoading(false);
+        return;
+      }
+
+      // Get current database
+      const response = await fetch('http://localhost:5678/api/database');
       const data = await response.json();
-      
-      // Update user in the list
-      const updatedUsers = data.users.map(user => 
-        user.id === userId 
-          ? { ...user, name, email, isAdmin }
-          : user
+      const users = data.users || [];
+
+      // Check if email already exists (excluding current user)
+      const emailExists = users.some(user => 
+        user.id !== parseInt(userId) && user.email.toLowerCase() === email.toLowerCase()
       );
-      
-      // In a real app, you would make an API call here to update the user on the server
-      // For now, we'll just update the UI and show a success message
-      
+
+      if (emailExists) {
+        toast.error('Email already in use by another user');
+        setLoading(false);
+        return;
+      }
+
+      // Find and update the user
+      const updatedUsers = users.map(user => {
+        if (user.id === parseInt(userId)) {
+          return { ...user, name, email, isAdmin };
+        }
+        return user;
+      });
+
+      // Save updated users to database
+      await fetch('http://localhost:5678/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ users: updatedUsers }),
+      });
+
       toast.success('User updated successfully');
       navigate('/admin/userlist');
     } catch (error) {
-      console.error('Error updating user:', error);
-      toast.error('Error updating user. Please try again.');
+      toast.error('Error updating user');
+      setLoading(false);
     }
   };
 
   if (loading) {
     return (
       <Container>
-        <div>Loading...</div>
+        <div className="text-center py-4">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
       </Container>
     );
   }
@@ -101,50 +129,76 @@ const UserEdit = () => {
 
   return (
     <Container>
-      <Link to="/admin/userlist" className="btn btn-light my-3">
-        Go Back
-      </Link>
-      <h1>Edit User</h1>
-      <Row>
-        <Col md={8}>
-          <Card>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1>Edit User</h1>
+        <Button variant="secondary" onClick={() => navigate('/admin/userlist')}>
+          <FaArrowLeft className="me-2" /> Back to Users
+        </Button>
+      </div>
+      
+      <Row className='justify-content-md-center'>
+        <Col xs={12} md={8}>
+          <Card className='p-4 rounded shadow-sm'>
             <Card.Body>
-              <Form onSubmit={submitHandler}>
-                <Form.Group controlId="name" className="mb-3">
-                  <Form.Label>Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                </Form.Group>
+              {loading ? (
+                <div className="text-center py-4">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+              ) : error ? (
+                <Alert variant='danger'>{error}</Alert>
+              ) : (
+                <Form onSubmit={submitHandler}>
+                  <Form.Group controlId='name' className='mb-4'>
+                    <Form.Label><FaUser className="me-2" /> Name</Form.Label>
+                    <Form.Control
+                      type='text'
+                      placeholder='Enter name'
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      className="form-control-lg"
+                    />
+                  </Form.Group>
 
-                <Form.Group controlId="email" className="mb-3">
-                  <Form.Label>Email Address</Form.Label>
-                  <Form.Control
-                    type="email"
-                    placeholder="Enter email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </Form.Group>
+                  <Form.Group controlId='email' className='mb-4'>
+                    <Form.Label><FaEnvelope className="me-2" /> Email Address</Form.Label>
+                    <Form.Control
+                      type='email'
+                      placeholder='Enter email'
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="form-control-lg"
+                    />
+                  </Form.Group>
 
-                <Form.Group controlId="isadmin" className="mb-3">
-                  <Form.Check
-                    type="checkbox"
-                    label="Is Admin"
-                    checked={isAdmin}
-                    onChange={(e) => setIsAdmin(e.target.checked)}
-                  />
-                </Form.Group>
+                  <Form.Group controlId='isAdmin' className='mb-4'>
+                    <div className="d-flex align-items-center">
+                      <Form.Check
+                        type='checkbox'
+                        label='Admin Privileges'
+                        checked={isAdmin}
+                        onChange={(e) => setIsAdmin(e.target.checked)}
+                        id="admin-checkbox"
+                        className="me-2"
+                      />
+                      {isAdmin ? (
+                        <span className="text-success"><FaCheck /> User has admin access</span>
+                      ) : (
+                        <span className="text-secondary"><FaTimes /> Regular user</span>
+                      )}
+                    </div>
+                  </Form.Group>
 
-                <Button type="submit" variant="primary" className="mt-3">
-                  Update
-                </Button>
-              </Form>
+                  <div className="d-grid gap-2 mt-4">
+                    <Button type='submit' variant='primary' size="lg">
+                      Update User
+                    </Button>
+                  </div>
+                </Form>
+              )}
             </Card.Body>
           </Card>
         </Col>

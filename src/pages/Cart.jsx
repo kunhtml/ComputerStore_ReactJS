@@ -24,7 +24,13 @@ const Cart = () => {
   };
 
   const checkoutHandler = () => {
-    navigate("/login?redirect=shipping");
+    // Check if user is logged in
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null');
+    if (!userInfo) {
+      navigate("/login?redirect=shipping");
+    } else {
+      navigate("/shipping");
+    }
   };
 
   return (

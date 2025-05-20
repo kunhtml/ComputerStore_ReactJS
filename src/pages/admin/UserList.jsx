@@ -15,8 +15,8 @@ const UserList = () => {
       try {
         setLoading(true);
         
-        // Lấy dữ liệu từ database.json
-        const response = await fetch('/database.json');
+        // Lấy dữ liệu từ server API
+        const response = await fetch('http://localhost:5678/api/database');
         const data = await response.json();
         
         // Lấy danh sách người dùng (trừ mật khẩu)
@@ -49,26 +49,41 @@ const UserList = () => {
   }, []);
 
   const deleteHandler = async (userId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
+    // First check if user is an admin
+    const userToDelete = users.find(user => user.id === userId);
+    
+    if (userToDelete && userToDelete.isAdmin) {
+      toast.error('Cannot delete admin users');
+      return;
+    }
+    
+    if (window.confirm('Are you sure you want to delete this user?')) {
       try {
         setLoading(true);
         
-        // Lấy dữ liệu từ database.json
-        const response = await fetch('/database.json');
+        // Get current data
+        const response = await fetch('http://localhost:5678/api/database');
         const data = await response.json();
         
-        // Lọc ra người dùng cần xóa
+        // Filter out user to delete
         const updatedUsers = (data.users || []).filter(user => user.id !== userId);
         
-        // Lưu ý: Trong ứng dụng thực tế, bạn cần gọi API để xóa dữ liệu trên server
+        // Update database through API
+        await fetch('http://localhost:5678/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ users: updatedUsers }),
+        });
         
-        // Cập nhật danh sách người dùng hiển thị
+        // Update displayed user list
         setUsers(updatedUsers.map(({ password, ...user }) => user));
         
-        toast.success('Xóa người dùng thành công');
+        toast.success('User deleted successfully');
       } catch (err) {
-        toast.error('Có lỗi xảy ra khi xóa người dùng');
-        console.error('Lỗi khi xóa người dùng:', err);
+        toast.error('Error deleting user');
+        console.error('Error deleting user:', err);
       } finally {
         setLoading(false);
       }
@@ -77,9 +92,13 @@ const UserList = () => {
 
   return (
     <Container>
-      <h1>Users</h1>
+      <h1 className="my-4">User Management</h1>
       {loading ? (
-        <div>Loading...</div>
+        <div className="text-center py-4">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
       ) : error ? (
         <div className="alert alert-danger">{error}</div>
       ) : (
@@ -95,8 +114,8 @@ const UserList = () => {
           </thead>
           <tbody>
             {users.map((user) => (
-              <tr key={user._id}>
-                <td>{user._id}</td>
+              <tr key={user.id}>
+                <td>{user.id}</td>
                 <td>{user.name}</td>
                 <td>
                   <a href={`mailto:${user.email}`}>{user.email}</a>
@@ -109,18 +128,32 @@ const UserList = () => {
                   )}
                 </td>
                 <td>
-                  <Link to={`/admin/user/${user._id}/edit`}>
-                    <Button variant="light" className="btn-sm">
-                      <FaEdit />
-                    </Button>
-                  </Link>
-                  <Button
-                    variant="danger"
-                    className="btn-sm ms-2"
-                    onClick={() => deleteHandler(user._id)}
-                  >
-                    <FaTrash />
-                  </Button>
+                  <div className="d-flex justify-content-center">
+                    <Link to={`/admin/user/${user.id}/edit`} className="me-2">
+                      <Button variant="primary" className="btn-sm">
+                        <FaEdit /> Edit
+                      </Button>
+                    </Link>
+                    {!user.isAdmin && (
+                      <Button
+                        variant="danger"
+                        className="btn-sm"
+                        onClick={() => deleteHandler(user.id)}
+                      >
+                        <FaTrash /> Delete
+                      </Button>
+                    )}
+                    {user.isAdmin && (
+                      <Button
+                        variant="secondary"
+                        className="btn-sm"
+                        disabled
+                        title="Admin users cannot be deleted"
+                      >
+                        <FaTrash /> Delete
+                      </Button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

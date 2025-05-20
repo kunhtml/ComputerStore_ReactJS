@@ -10,9 +10,12 @@ const PlaceOrder = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Get cart from localStorage
-  const cart = JSON.parse(localStorage.getItem('cart') || '{}');
-  const { cartItems = [], shippingAddress = {}, paymentMethod } = cart;
+  // Get cart items from localStorage
+  const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+  // Get shipping address from localStorage
+  const shippingAddress = JSON.parse(localStorage.getItem('shippingAddress') || '{}');
+  // Get payment method from localStorage
+  const paymentMethod = JSON.parse(localStorage.getItem('paymentMethod') || '"PayPal"');
 
   // Calculate prices
   const addDecimals = (num) => {
@@ -45,8 +48,10 @@ const PlaceOrder = () => {
       
       // Create order object
       const order = {
-        _id: Date.now().toString(),
-        user: userInfo._id,
+        id: Date.now().toString(),
+        userId: userInfo.id,
+        userName: userInfo.name,
+        userEmail: userInfo.email,
         orderItems: cartItems,
         shippingAddress,
         paymentMethod,
@@ -55,21 +60,34 @@ const PlaceOrder = () => {
         taxPrice,
         totalPrice,
         isPaid: false,
+        paidAt: null,
         isDelivered: false,
+        deliveredAt: null,
+        status: 'Pending',
         createdAt: new Date().toISOString(),
       };
       
-      // In a real app, you would make an API call to create the order
-      // For demo purposes, we'll just store it in localStorage
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-      orders.push(order);
-      localStorage.setItem('orders', JSON.stringify(orders));
+      // Save order to database.json through API
+      const response = await fetch('http://localhost:5678/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ order }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create order');
+      }
       
       // Clear the cart
-      localStorage.removeItem('cart');
+      localStorage.removeItem('cartItems');
+      
+      // Show success message
+      toast.success('Order placed successfully! Your order is pending confirmation.');
       
       // Navigate to the order details page
-      navigate(`/order/${order._id}`);
+      navigate(`/order/${order.id}`);
       
     } catch (err) {
       console.error('Error creating order:', err);

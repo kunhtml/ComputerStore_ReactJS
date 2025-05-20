@@ -28,7 +28,6 @@ import {
 import Paginate from "../../components/Paginate";
 import axios from "../../services/axiosConfig";
 import { useAppContext } from "../../context/AppContext";
-import databaseData from "../../data/database.json";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
@@ -45,6 +44,27 @@ const ProductList = () => {
   const [newBrand, setNewBrand] = useState("");
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+
+  // Load categories and brands from database
+  useEffect(() => {
+    const loadCategoriesAndBrands = async () => {
+      try {
+        const response = await fetch('http://localhost:5678/api/database');
+        const data = await response.json();
+        
+        // Get unique categories and brands from products
+        const uniqueCategories = [...new Set(data.products.map(p => p.category))];
+        const uniqueBrands = [...new Set(data.products.map(p => p.brand))];
+        
+        setCategories(uniqueCategories);
+        setBrands(uniqueBrands);
+      } catch (err) {
+        console.error("Error loading categories and brands:", err);
+      }
+    };
+    
+    loadCategoriesAndBrands();
+  }, []);
   const [activeTab, setActiveTab] = useState("products");
 
   // State cho việc chỉnh sửa
@@ -173,206 +193,445 @@ const ProductList = () => {
     setShowBrandModal(true);
   };
 
-  // Xử lý tạo category mới
-  const handleCreateCategory = async () => {
+  // Xử lý thêm mới category
+  const handleAddCategory = async () => {
     if (!newCategory.trim()) {
-      toast.error("Vui lòng nhập tên danh mục");
+      toast.error("Category name is required");
       return;
     }
 
-    // Kiểm tra danh mục đã tồn tại chưa
-    if (categories.includes(newCategory.trim())) {
-      toast.error("Danh mục này đã tồn tại");
-      return;
-    }
-
-    // Thêm category vào database
-    const updatedCategories = [...categories, newCategory.trim()];
-    setCategories(updatedCategories);
-
-    // Lưu vào database.json thông qua API
     try {
-      await fetch("http://localhost:5678/api/categories", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ categories: updatedCategories }),
+      const response = await fetch('http://localhost:5678/api/database');
+      const data = await response.json();
+      
+      // Check if category already exists
+      if (data.products.some(p => p.category === newCategory)) {
+        toast.error("Category already exists");
+        return;
+      }
+
+      // Update database
+      const updatedProducts = [...data.products];
+      const updatedCategories = [...new Set([...categories, newCategory])];
+      
+      await fetch('http://localhost:5678/api/database', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          products: updatedProducts,
+          categories: updatedCategories
+        })
       });
-      toast.success("Đã thêm danh mục mới thành công");
+
+      setCategories(updatedCategories);
       setNewCategory("");
       setShowCategoryModal(false);
-    } catch (error) {
-      console.error("Lỗi khi thêm danh mục:", error);
-      toast.error("Có lỗi xảy ra khi thêm danh mục");
+      toast.success("Category added successfully");
+    } catch (err) {
+      console.error("Error adding category:", err);
+      toast.error("Failed to add category");
     }
   };
 
-  // Xử lý tạo brand mới
-  const handleCreateBrand = async () => {
-    if (!newBrand.trim()) {
-      toast.error("Vui lòng nhập tên thương hiệu");
-      return;
-    }
-
-    // Kiểm tra thương hiệu đã tồn tại chưa
-    if (brands.includes(newBrand.trim())) {
-      toast.error("Thương hiệu này đã tồn tại");
-      return;
-    }
-
-    // Thêm brand vào database
-    const updatedBrands = [...brands, newBrand.trim()];
-    setBrands(updatedBrands);
-
-    // Lưu vào database.json thông qua API
-    try {
-      await fetch("http://localhost:5678/api/brands", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ brands: updatedBrands }),
-      });
-      toast.success("Đã thêm thương hiệu mới thành công");
-      setNewBrand("");
-      setShowBrandModal(false);
-    } catch (error) {
-      console.error("Lỗi khi thêm thương hiệu:", error);
-      toast.error("Có lỗi xảy ra khi thêm thương hiệu");
-    }
-  };
-
-  // Bắt đầu chỉnh sửa category
-  const startEditCategory = (index, categoryName) => {
-    setEditingCategoryIndex(index);
-    setEditedCategoryName(categoryName);
-  };
-
-  // Lưu category đã chỉnh sửa
-  const saveEditedCategory = async (index) => {
-    if (!editedCategoryName.trim()) {
-      toast.error("Tên danh mục không được để trống");
-      return;
-    }
-
-    // Kiểm tra tên mới có trùng với danh mục khác không
-    if (
-      categories.some(
-        (cat, i) => i !== index && cat === editedCategoryName.trim()
-      )
-    ) {
-      toast.error("Danh mục này đã tồn tại");
-      return;
-    }
-
-    // Cập nhật danh mục
-    const updatedCategories = [...categories];
-    updatedCategories[index] = editedCategoryName.trim();
-    setCategories(updatedCategories);
-
-    // Lưu vào database.json thông qua API
-    try {
-      await fetch("http://localhost:5678/api/categories", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ categories: updatedCategories }),
-      });
-    } catch (error) {
-      console.error("Lỗi khi lưu danh mục:", error);
-    }
-
-    toast.success("Đã cập nhật danh mục thành công");
-    setEditingCategoryIndex(-1);
-  };
-
-  // Xóa category
-  const deleteCategory = async (index) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa danh mục này?")) {
-      const updatedCategories = categories.filter((_, i) => i !== index);
-      setCategories(updatedCategories);
-
-      // Lưu vào database.json thông qua API
-      try {
-        await fetch("http://localhost:5678/api/categories", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ categories: updatedCategories }),
-        });
-        toast.success("Đã xóa danh mục thành công");
-      } catch (error) {
-        console.error("Lỗi khi xóa danh mục:", error);
-        toast.error("Có lỗi xảy ra khi xóa danh mục");
-      }
-    }
-  };
-
-  // Bắt đầu chỉnh sửa brand
-  const startEditBrand = (index, brandName) => {
+  // Start edit brand function
+  const startEditBrand = (index, brand) => {
     setEditingBrandIndex(index);
-    setEditedBrandName(brandName);
+    setEditedBrandName(brand);
   };
-
-  // Lưu brand đã chỉnh sửa
+  
+  // Save edited brand function
   const saveEditedBrand = async (index) => {
     if (!editedBrandName.trim()) {
-      toast.error("Tên thương hiệu không được để trống");
+      toast.error("Brand name is required");
       return;
     }
-
-    // Kiểm tra tên mới có trùng với thương hiệu khác không
-    if (brands.some((b, i) => i !== index && b === editedBrandName.trim())) {
-      toast.error("Thương hiệu này đã tồn tại");
-      return;
-    }
-
-    // Cập nhật thương hiệu
-    const updatedBrands = [...brands];
-    updatedBrands[index] = editedBrandName.trim();
-    setBrands(updatedBrands);
-
-    // Lưu vào database.json thông qua API
+    
     try {
-      await fetch("http://localhost:5678/api/brands", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ brands: updatedBrands }),
+      const response = await fetch('http://localhost:5678/api/database');
+      const data = await response.json();
+      
+      // Check if brand already exists
+      if (brands.some((b, i) => i !== index && b === editedBrandName)) {
+        toast.error("Brand already exists");
+        return;
+      }
+      
+      // Update products with the new brand name
+      const oldBrandName = brands[index];
+      const updatedProducts = data.products.map(p => {
+        if (p.brand === oldBrandName) {
+          return { ...p, brand: editedBrandName };
+        }
+        return p;
       });
-      toast.success("Đã cập nhật thương hiệu thành công");
-    } catch (error) {
-      console.error("Lỗi khi cập nhật thương hiệu:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật thương hiệu");
+      
+      // Update brands list
+      const updatedBrands = [...brands];
+      updatedBrands[index] = editedBrandName;
+      
+      // Save to database
+      await fetch('http://localhost:5678/api/database', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          products: updatedProducts
+        })
+      });
+      
+      setBrands(updatedBrands);
+      setEditingBrandIndex(-1);
+      toast.success("Brand updated successfully");
+    } catch (err) {
+      console.error("Error updating brand:", err);
+      toast.error("Failed to update brand");
+    }
+  };
+  
+  // Delete brand function
+  const deleteBrand = async (index) => {
+    if (!window.confirm("Are you sure you want to delete this brand?")) {
+      return;
+    }
+    
+    try {
+      const brandToDelete = brands[index];
+      const response = await fetch('http://localhost:5678/api/database');
+      const data = await response.json();
+      
+      // Check if any product uses this brand
+      if (data.products.some(p => p.brand === brandToDelete)) {
+        toast.error("Cannot delete brand that is used by products");
+        return;
+      }
+      
+      // Update brands list
+      const updatedBrands = brands.filter((_, i) => i !== index);
+      
+      // Save to database
+      await fetch('http://localhost:5678/api/database', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          brands: updatedBrands
+        })
+      });
+      
+      setBrands(updatedBrands);
+      toast.success("Brand deleted successfully");
+    } catch (err) {
+      console.error("Error deleting brand:", err);
+      toast.error("Failed to delete brand");
+    }
+  };
+  
+  // Start edit category function
+  const startEditCategory = (index, category) => {
+    setEditingCategoryIndex(index);
+    setEditedCategoryName(category);
+  };
+  
+  // Save edited category function
+  const saveEditedCategory = async (index) => {
+    if (!editedCategoryName.trim()) {
+      toast.error("Category name is required");
+      return;
+    }
+    
+    try {
+      const response = await fetch('http://localhost:5678/api/database');
+      const data = await response.json();
+      
+      // Check if category already exists
+      if (categories.some((c, i) => i !== index && c === editedCategoryName)) {
+        toast.error("Category already exists");
+        return;
+      }
+      
+      // Update products with the new category name
+      const oldCategoryName = categories[index];
+      const updatedProducts = data.products.map(p => {
+        if (p.category === oldCategoryName) {
+          return { ...p, category: editedCategoryName };
+        }
+        return p;
+      });
+      
+      // Update categories list
+      const updatedCategories = [...categories];
+      updatedCategories[index] = editedCategoryName;
+      
+      // Save to database
+      await fetch('http://localhost:5678/api/database', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          products: updatedProducts
+        })
+      });
+      
+      setCategories(updatedCategories);
+      setEditingCategoryIndex(-1);
+      toast.success("Category updated successfully");
+    } catch (err) {
+      console.error("Error updating category:", err);
+      toast.error("Failed to update category");
+    }
+  };
+  
+  // Delete category function
+  const deleteCategory = async (index) => {
+    if (!window.confirm("Are you sure you want to delete this category?")) {
+      return;
+    }
+    
+    try {
+      const categoryToDelete = categories[index];
+      const response = await fetch('http://localhost:5678/api/database');
+      const data = await response.json();
+      
+      // Check if any product uses this category
+      if (data.products.some(p => p.category === categoryToDelete)) {
+        toast.error("Cannot delete category that is used by products");
+        return;
+      }
+      
+      // Update categories list
+      const updatedCategories = categories.filter((_, i) => i !== index);
+      
+      // Save to database
+      await fetch('http://localhost:5678/api/database', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          categories: updatedCategories
+        })
+      });
+      
+      setCategories(updatedCategories);
+      toast.success("Category deleted successfully");
+    } catch (err) {
+      console.error("Error deleting category:", err);
+      toast.error("Failed to delete category");
+    }
+  };
+  
+  // Xử lý thêm mới brand
+  const handleAddBrand = async () => {
+    if (!newBrand.trim()) {
+      toast.error("Brand name is required");
+      return;
     }
 
-    setEditingBrandIndex(-1);
+    try {
+      const response = await fetch('http://localhost:5678/api/database');
+      const data = await response.json();
+      
+      // Check if brand already exists
+      if (data.products.some(p => p.brand === newBrand)) {
+        toast.error("Brand already exists");
+        return;
+      }
+
+      // Update database
+      const updatedProducts = [...data.products];
+      const updatedBrands = [...new Set([...brands, newBrand])];
+      
+      await fetch('http://localhost:5678/api/database', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          products: updatedProducts,
+          brands: updatedBrands
+        })
+      });
+
+      setBrands(updatedBrands);
+      setNewBrand("");
+      setShowBrandModal(false);
+      toast.success("Brand added successfully");
+    } catch (err) {
+      console.error("Error adding brand:", err);
+      toast.error("Failed to add brand");
+    }
   };
 
-  // Xóa brand
-  const deleteBrand = async (index) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa thương hiệu này?")) {
-      const updatedBrands = brands.filter((_, i) => i !== index);
-      setBrands(updatedBrands);
+  // Xử lý chỉnh sửa category
+  const handleEditCategory = (index) => {
+    setEditingCategoryIndex(index);
+    setEditedCategoryName(categories[index]);
+    setShowCategoryModal(true);
+  };
 
-      // Lưu vào database.json thông qua API
-      try {
-        await fetch("http://localhost:5678/api/brands", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ brands: updatedBrands }),
-        });
-        toast.success("Đã xóa thương hiệu thành công");
-      } catch (error) {
-        console.error("Lỗi khi xóa thương hiệu:", error);
-        toast.error("Có lỗi xảy ra khi xóa thương hiệu");
-      }
+  // Xử lý lưu category đã chỉnh sửa
+  const handleSaveEditedCategory = async () => {
+    if (!editedCategoryName.trim()) {
+      toast.error("Category name is required");
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5678/api/database');
+      const data = await response.json();
+      
+      // Update products that use this category
+      const updatedProducts = data.products.map(p => {
+        if (p.category === categories[editingCategoryIndex]) {
+          return { ...p, category: editedCategoryName };
+        }
+        return p;
+      });
+      
+      // Update categories
+      const updatedCategories = [...categories];
+      updatedCategories[editingCategoryIndex] = editedCategoryName;
+      
+      await fetch('http://localhost:5678/api/database', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          products: updatedProducts,
+          categories: [...new Set(updatedCategories)]
+        })
+      });
+
+      setCategories(updatedCategories);
+      setEditingCategoryIndex(-1);
+      setEditedCategoryName("");
+      setShowCategoryModal(false);
+      toast.success("Category updated successfully");
+    } catch (err) {
+      console.error("Error updating category:", err);
+      toast.error("Failed to update category");
+    }
+  };
+
+  // Xử lý xóa category
+  const handleDeleteCategory = async (index) => {
+    if (!window.confirm("Are you sure you want to delete this category?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5678/api/database');
+      const data = await response.json();
+      
+      // Update products that use this category
+      const updatedProducts = data.products.map(p => {
+        if (p.category === categories[index]) {
+          return { ...p, category: "Uncategorized" };
+        }
+        return p;
+      });
+      
+      // Update categories
+      const updatedCategories = categories.filter((_, i) => i !== index);
+      
+      await fetch('http://localhost:5678/api/database', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          products: updatedProducts,
+          categories: updatedCategories
+        })
+      });
+
+      setCategories(updatedCategories);
+      toast.success("Category deleted successfully");
+    } catch (err) {
+      console.error("Error deleting category:", err);
+      toast.error("Failed to delete category");
+    }
+  };
+
+  // Xử lý chỉnh sửa brand
+  const handleEditBrand = (index) => {
+    setEditingBrandIndex(index);
+    setEditedBrandName(brands[index]);
+    setShowBrandModal(true);
+  };
+
+  // Xử lý lưu brand đã chỉnh sửa
+  const handleSaveEditedBrand = async () => {
+    if (!editedBrandName.trim()) {
+      toast.error("Brand name is required");
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5678/api/database');
+      const data = await response.json();
+      
+      // Update products that use this brand
+      const updatedProducts = data.products.map(p => {
+        if (p.brand === brands[editingBrandIndex]) {
+          return { ...p, brand: editedBrandName };
+        }
+        return p;
+      });
+      
+      // Update brands
+      const updatedBrands = [...brands];
+      updatedBrands[editingBrandIndex] = editedBrandName;
+      
+      await fetch('http://localhost:5678/api/database', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          products: updatedProducts,
+          brands: [...new Set(updatedBrands)]
+        })
+      });
+
+      setBrands(updatedBrands);
+      setEditingBrandIndex(-1);
+      setEditedBrandName("");
+      setShowBrandModal(false);
+      toast.success("Brand updated successfully");
+    } catch (err) {
+      console.error("Error updating brand:", err);
+      toast.error("Failed to update brand");
+    }
+  };
+
+  // Xử lý xóa brand
+  const handleDeleteBrand = async (index) => {
+    if (!window.confirm("Are you sure you want to delete this brand?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5678/api/database');
+      const data = await response.json();
+      
+      // Update products that use this brand
+      const updatedProducts = data.products.map(p => {
+        if (p.brand === brands[index]) {
+          return { ...p, brand: "Unknown" };
+        }
+        return p;
+      });
+      
+      // Update brands
+      const updatedBrands = brands.filter((_, i) => i !== index);
+      
+      await fetch('http://localhost:5678/api/database', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          products: updatedProducts,
+          brands: updatedBrands
+        })
+      });
+
+      setBrands(updatedBrands);
+      toast.success("Brand deleted successfully");
+    } catch (err) {
+      console.error("Error deleting brand:", err);
+      toast.error("Failed to delete brand");
     }
   };
 
@@ -399,21 +658,18 @@ const ProductList = () => {
               <Form.Control
                 type="text"
                 placeholder="Enter category name"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
+                value={editingCategoryIndex >= 0 ? editedCategoryName : newCategory}
+                onChange={(e) => editingCategoryIndex >= 0 ? setEditedCategoryName(e.target.value) : setNewCategory(e.target.value)}
               />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={() => setShowCategoryModal(false)}
-          >
-            Close
+          <Button variant="secondary" onClick={() => setShowCategoryModal(false)}>
+            Cancel
           </Button>
-          <Button variant="primary" onClick={handleCreateCategory}>
-            Save Category
+          <Button variant="primary" onClick={editingCategoryIndex >= 0 ? handleSaveEditedCategory : handleAddCategory}>
+            {editingCategoryIndex >= 0 ? "Save Changes" : "Add Category"}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -430,18 +686,18 @@ const ProductList = () => {
               <Form.Control
                 type="text"
                 placeholder="Enter brand name"
-                value={newBrand}
-                onChange={(e) => setNewBrand(e.target.value)}
+                value={editingBrandIndex >= 0 ? editedBrandName : newBrand}
+                onChange={(e) => editingBrandIndex >= 0 ? setEditedBrandName(e.target.value) : setNewBrand(e.target.value)}
               />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowBrandModal(false)}>
-            Close
+            Cancel
           </Button>
-          <Button variant="primary" onClick={handleCreateBrand}>
-            Save Brand
+          <Button variant="primary" onClick={editingBrandIndex >= 0 ? handleSaveEditedBrand : handleAddBrand}>
+            {editingBrandIndex >= 0 ? "Save Changes" : "Add Brand"}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -453,14 +709,10 @@ const ProductList = () => {
         className="mb-3"
       >
         <Tab eventKey="products" title="Products">
-          <div className="mb-3">
-            <Button
-              variant="primary"
-              onClick={createProductHandler}
-              className="d-flex align-items-center"
-              style={{ backgroundColor: "#007bff", borderColor: "#007bff" }}
-            >
-              <FaPlus className="me-1" /> Add New Product
+          <div className="d-flex justify-content-between mb-3">
+            <h2>Products</h2>
+            <Button variant="primary" onClick={() => navigate("/admin/product/new")}>
+              <FaPlus /> Add Product
             </Button>
           </div>
 
