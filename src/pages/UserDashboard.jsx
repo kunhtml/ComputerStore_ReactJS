@@ -1,25 +1,43 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Row, Col, Card, ListGroup, Badge } from 'react-bootstrap';
-import { listMyOrders } from '../actions/orderActions';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
+import { getOrders } from '../utils/databaseUtils';
+import { useAppContext } from '../context/AppContext';
 
 const UserDashboard = () => {
-  const dispatch = useDispatch();
-
-  const userLogin = useSelector((state) => state.userLogin);
-  const { userInfo } = userLogin;
-
-  const orderListMy = useSelector((state) => state.orderListMy);
-  const { loading: loadingOrders, error: errorOrders, orders } = orderListMy;
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  const { userInfo } = useAppContext();
 
   useEffect(() => {
-    if (userInfo) {
-      dispatch(listMyOrders());
-    }
-  }, [dispatch, userInfo]);
+    const fetchUserOrders = async () => {
+      if (!userInfo) return;
+      
+      try {
+        setLoading(true);
+        // Get all orders from the database
+        const allOrders = await getOrders();
+        
+        // Filter orders for the current user
+        const userOrders = allOrders.filter(order => order.user?.id === userInfo.id);
+        console.log('User orders loaded:', userOrders.length);
+        
+        setOrders(userOrders);
+        setError('');
+      } catch (err) {
+        console.error('Error fetching user orders:', err);
+        setError('Could not load your orders');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserOrders();
+  }, [userInfo]);
 
   return (
     <div className="py-4">
@@ -51,10 +69,10 @@ const UserDashboard = () => {
           <Card>
             <Card.Body>
               <Card.Title>Đơn hàng gần đây</Card.Title>
-              {loadingOrders ? (
+              {loading ? (
                 <Loader />
-              ) : errorOrders ? (
-                <Message variant="danger">{errorOrders}</Message>
+              ) : error ? (
+                <Message variant="danger">{error}</Message>
               ) : (
                 <div className="table-responsive">
                   <table className="table table-hover">
@@ -69,8 +87,8 @@ const UserDashboard = () => {
                     </thead>
                     <tbody>
                       {orders && orders.slice(0, 3).map((order) => (
-                        <tr key={order._id}>
-                          <td>{order._id}</td>
+                        <tr key={order.id}>
+                          <td>{order.id}</td>
                           <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                           <td>${order.totalPrice}</td>
                           <td>

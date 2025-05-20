@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Form, Button, Container, Row, Col, Card, Alert } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { FaUser, FaEnvelope, FaLock, FaCheck, FaTimes, FaArrowLeft } from 'react-icons/fa';
+import { getUserById } from '../../utils/databaseUtils';
 import axios from '../../services/axiosConfig';
 
 const UserEdit = () => {
@@ -28,10 +29,8 @@ const UserEdit = () => {
           return;
         }
 
-        // Fetch user data from server API
-        const response = await fetch('http://localhost:5678/api/database');
-        const data = await response.json();
-        const user = data.users?.find(u => u.id === parseInt(userId));
+        // Fetch user data using the utility function
+        const user = await getUserById(parseInt(userId));
         
         if (user) {
           setName(user.name);

@@ -1,0 +1,353 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Admin User",
+      "email": "admin@example.com",
+      "password": "123456",
+      "isAdmin": true,
+      "createdAt": "2023-05-20T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "password": "123456",
+      "isAdmin": false,
+      "createdAt": "2023-05-20T01:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "password": "123456",
+      "isAdmin": false,
+      "createdAt": "2023-05-20T02:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "name": "Technical Support",
+      "email": "support@example.com",
+      "password": "123456",
+      "isAdmin": true,
+      "createdAt": "2023-05-20T03:00:00.000Z"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "Gaming PC Pro",
+      "image": "https://via.placeholder.com/600x400?text=Gaming+PC+Pro",
+      "brand": "GamingTech",
+      "category": "Gaming PC",
+      "description": "High performance gaming PC with latest hardware",
+      "price": 1999.99,
+      "countInStock": 10,
+      "rating": 4.5,
+      "numReviews": 12,
+      "specs": [
+        "Intel Core i9-12900K",
+        "NVIDIA RTX 4090 24GB",
+        "32GB DDR5 RAM",
+        "2TB NVMe SSD",
+        "1000W 80+ Gold PSU",
+        "Liquid Cooling"
+      ],
+      "reviews": [
+        {
+          "name": "John",
+          "rating": 5,
+          "comment": "Amazing performance!"
+        },
+        {
+          "name": "Sarah",
+          "rating": 4,
+          "comment": "Great for gaming and work"
+        }
+      ],
+      "createdAt": "2023-05-20T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "Office PC Plus",
+      "image": "https://via.placeholder.com/600x400?text=Office+PC+Plus",
+      "brand": "OfficePro",
+      "category": "Office PC",
+      "description": "Reliable PC for office and everyday use",
+      "price": 899.99,
+      "countInStock": 25,
+      "rating": 4.0,
+      "numReviews": 8,
+      "specs": [
+        "Intel Core i5-12400",
+        "Intel UHD Graphics 730",
+        "16GB DDR4 RAM",
+        "512GB NVMe SSD",
+        "500W 80+ PSU",
+        "Air Cooling"
+      ],
+      "reviews": [
+        {
+          "name": "Mike",
+          "rating": 5,
+          "comment": "Perfect for my home office"
+        }
+      ],
+      "createdAt": "2023-05-20T01:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "name": "Content Creator PC",
+      "image": "https://via.placeholder.com/600x400?text=Content+Creator+PC",
+      "brand": "CreatorPro",
+      "category": "Workstation",
+      "description": "Powerful workstation for content creation",
+      "price": 2499.99,
+      "countInStock": 5,
+      "rating": 4.8,
+      "numReviews": 15,
+      "specs": [
+        "AMD Ryzen 9 7950X",
+        "NVIDIA RTX 4080 16GB",
+        "64GB DDR5 RAM",
+        "2TB NVMe SSD + 4TB HDD",
+        "1200W 80+ Platinum PSU",
+        "Liquid Cooling"
+      ],
+      "reviews": [
+        {
+          "name": "Alex",
+          "rating": 5,
+          "comment": "Perfect for 4K video editing"
+        },
+        {
+          "name": "Jennifer",
+          "rating": 4,
+          "comment": "Handles all my 3D rendering needs"
+        }
+      ],
+      "createdAt": "2023-05-20T02:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "name": "Budget Gaming PC",
+      "image": "https://via.placeholder.com/600x400?text=Budget+Gaming+PC",
+      "brand": "GamingTech",
+      "category": "Gaming PC",
+      "description": "Affordable gaming PC for casual gamers",
+      "price": 799.99,
+      "countInStock": 15,
+      "rating": 4.2,
+      "numReviews": 10,
+      "specs": [
+        "AMD Ryzen 5 5600X",
+        "NVIDIA RTX 3060 12GB",
+        "16GB DDR4 RAM",
+        "1TB NVMe SSD",
+        "650W 80+ Bronze PSU",
+        "Air Cooling"
+      ],
+      "reviews": [
+        {
+          "name": "David",
+          "rating": 4,
+          "comment": "Great value for the price"
+        }
+      ],
+      "createdAt": "2023-05-20T03:00:00.000Z"
+    },
+    {
+      "id": 5,
+      "name": "Compact Office PC",
+      "image": "https://via.placeholder.com/600x400?text=Compact+Office+PC",
+      "brand": "OfficePro",
+      "category": "Office PC",
+      "description": "Space-saving PC for small workspaces",
+      "price": 699.99,
+      "countInStock": 20,
+      "rating": 4.3,
+      "numReviews": 7,
+      "specs": [
+        "Intel Core i3-12100",
+        "Intel UHD Graphics 730",
+        "8GB DDR4 RAM",
+        "256GB NVMe SSD",
+        "300W 80+ PSU",
+        "Air Cooling"
+      ],
+      "reviews": [
+        {
+          "name": "Emily",
+          "rating": 4,
+          "comment": "Perfect size for my small desk"
+        }
+      ],
+      "createdAt": "2023-05-20T04:00:00.000Z"
+    },
+    {
+      "id": 6,
+      "name": "Professional Workstation",
+      "image": "https://via.placeholder.com/600x400?text=Professional+Workstation",
+      "brand": "CreatorPro",
+      "category": "Workstation",
+      "description": "High-end workstation for professional use",
+      "price": 3499.99,
+      "countInStock": 3,
+      "rating": 5.0,
+      "numReviews": 5,
+      "specs": [
+        "Intel Xeon W-3375",
+        "NVIDIA RTX A6000 48GB",
+        "128GB ECC RAM",
+        "4TB NVMe SSD + 8TB HDD",
+        "1600W 80+ Titanium PSU",
+        "Liquid Cooling"
+      ],
+      "reviews": [
+        {
+          "name": "Robert",
+          "rating": 5,
+          "comment": "Incredible performance for CAD and simulation work"
+        }
+      ],
+      "createdAt": "2023-05-20T05:00:00.000Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": 1,
+      "user": {
+        "id": 2,
+        "name": "John Doe",
+        "email": "john@example.com"
+      },
+      "orderItems": [
+        {
+          "id": 1,
+          "name": "Gaming PC Pro",
+          "image": "https://via.placeholder.com/600x400?text=Gaming+PC+Pro",
+          "price": 1999.99,
+          "qty": 1,
+          "product": 1
+        }
+      ],
+      "shippingAddress": {
+        "address": "123 Main St",
+        "city": "Boston",
+        "postalCode": "02108",
+        "country": "USA"
+      },
+      "paymentMethod": "PayPal",
+      "paymentResult": {
+        "id": "PAY123456789",
+        "status": "COMPLETED",
+        "update_time": "2023-05-21T10:00:00.000Z",
+        "email_address": "john@example.com"
+      },
+      "taxPrice": 200.00,
+      "shippingPrice": 0.00,
+      "totalPrice": 2199.99,
+      "isPaid": true,
+      "paidAt": "2023-05-21T10:00:00.000Z",
+      "isDelivered": true,
+      "deliveredAt": "2023-05-23T14:00:00.000Z",
+      "createdAt": "2023-05-21T09:30:00.000Z"
+    },
+    {
+      "id": 2,
+      "user": {
+        "id": 3,
+        "name": "Jane Smith",
+        "email": "jane@example.com"
+      },
+      "orderItems": [
+        {
+          "id": 2,
+          "name": "Office PC Plus",
+          "image": "https://via.placeholder.com/600x400?text=Office+PC+Plus",
+          "price": 899.99,
+          "qty": 1,
+          "product": 2
+        }
+      ],
+      "shippingAddress": {
+        "address": "456 Oak Ave",
+        "city": "New York",
+        "postalCode": "10001",
+        "country": "USA"
+      },
+      "paymentMethod": "Credit Card",
+      "paymentResult": {
+        "id": "CC987654321",
+        "status": "COMPLETED",
+        "update_time": "2023-05-22T11:00:00.000Z",
+        "email_address": "jane@example.com"
+      },
+      "taxPrice": 90.00,
+      "shippingPrice": 10.00,
+      "totalPrice": 999.99,
+      "isPaid": true,
+      "paidAt": "2023-05-22T11:00:00.000Z",
+      "isDelivered": false,
+      "deliveredAt": null,
+      "createdAt": "2023-05-22T10:45:00.000Z"
+    },
+    {
+      "id": 3,
+      "user": {
+        "id": 2,
+        "name": "John Doe",
+        "email": "john@example.com"
+      },
+      "orderItems": [
+        {
+          "id": 4,
+          "name": "Budget Gaming PC",
+          "image": "https://via.placeholder.com/600x400?text=Budget+Gaming+PC",
+          "price": 799.99,
+          "qty": 1,
+          "product": 4
+        },
+        {
+          "id": 5,
+          "name": "Compact Office PC",
+          "image": "https://via.placeholder.com/600x400?text=Compact+Office+PC",
+          "price": 699.99,
+          "qty": 1,
+          "product": 5
+        }
+      ],
+      "shippingAddress": {
+        "address": "123 Main St",
+        "city": "Boston",
+        "postalCode": "02108",
+        "country": "USA"
+      },
+      "paymentMethod": "PayPal",
+      "paymentResult": {
+        "id": "PAY987123456",
+        "status": "COMPLETED",
+        "update_time": "2023-06-01T09:00:00.000Z",
+        "email_address": "john@example.com"
+      },
+      "taxPrice": 150.00,
+      "shippingPrice": 0.00,
+      "totalPrice": 1649.98,
+      "isPaid": true,
+      "paidAt": "2023-06-01T09:00:00.000Z",
+      "isDelivered": true,
+      "deliveredAt": "2023-06-03T13:00:00.000Z",
+      "createdAt": "2023-06-01T08:30:00.000Z"
+    }
+  ],
+  "categories": [
+    "Gaming PC",
+    "Office PC",
+    "Workstation"
+  ],
+  "brands": [
+    "GamingTech",
+    "OfficePro",
+    "CreatorPro"
+  ]
+}

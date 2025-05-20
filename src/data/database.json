@@ -324,7 +324,7 @@
       "description": "High-quality office pc featuring Intel Core i7-13700K, NVIDIA RTX 4070 12GB, and 16GB DDR5 RAM. Perfect for business and productivity.",
       "price": 1230,
       "countInStock": 15,
-      "rating": 4.6,
+      "rating": 4.333333333333333,
       "numReviews": 25,
       "featured": true,
       "specs": [
@@ -339,7 +339,7 @@
       "reviews": [
         {
           "name": "Sam",
-          "rating": 3,
+          "rating": 5,
           "comment": "It meets my basic needs, but wouldn't recommend for power users."
         },
         {

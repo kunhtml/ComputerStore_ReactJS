@@ -39,7 +39,13 @@ const SalesChart = ({ orders }) => {
   const [chartType, setChartType] = useState('bar');
 
   useEffect(() => {
-    if (!orders || orders.length === 0) return;
+    if (!orders || orders.length === 0) {
+      // Set default values when no orders exist
+      setTotalRevenue(0);
+      setTotalOrders(0);
+      setAverageOrderValue(0);
+      return;
+    }
 
     // Calculate total revenue and orders
     const total = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
@@ -108,7 +114,8 @@ const SalesChart = ({ orders }) => {
           label: 'Monthly Revenue ($)',
           data: sortedMonths.map(month => {
             const revenue = ordersByMonth[month].revenue;
-            return typeof revenue === 'number' ? revenue.toFixed(2) : 0;
+            // Convert to number before using toFixed to avoid errors
+            return typeof revenue === 'number' ? parseFloat(revenue.toFixed(2)) : 0;
           }),
           backgroundColor: 'rgba(54, 162, 235, 0.5)',
           borderColor: 'rgba(54, 162, 235, 1)',

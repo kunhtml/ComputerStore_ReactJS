@@ -25,13 +25,12 @@ const Products = () => {
     { value: "all", label: "Tất cả" },
   ]);
 
-  // Lấy danh sách danh mục từ database.json
-  // Initial setup of categories and handling URL parameters
+  // Lấy danh sách danh mục từ database.json trong thư mục src/data
   useEffect(() => {
     const getCategories = async () => {
       try {
-        // Get products from API instead of axios.database
-        const response = await fetch('http://localhost:5678/api/database');
+        // Get products from src/data/database.json
+        const response = await fetch('/data/database.json');
         const data = await response.json();
         const productsData = data.products || [];
 
@@ -39,6 +38,8 @@ const Products = () => {
         const uniqueCategories = [
           ...new Set(productsData.map((product) => product.category)),
         ];
+
+        console.log("Found categories:", uniqueCategories);
 
         // Tạo danh sách danh mục với định dạng { value, label }
         const categoryList = [
@@ -78,7 +79,37 @@ const Products = () => {
           setSelectedCategory("all");
         }
       } catch (err) {
-        console.error("Lỗi khi lấy danh mục:", err);
+        console.error("Lỗi khi lấy danh mục từ local file:", err);
+        
+        // Fallback to API if local file fails
+        try {
+          const apiResponse = await fetch('http://localhost:5678/api/database');
+          const apiData = await apiResponse.json();
+          const apiProductsData = apiData.products || [];
+          
+          // Process categories from API data
+          const apiUniqueCategories = [
+            ...new Set(apiProductsData.map((product) => product.category)),
+          ];
+          
+          const apiCategoryList = [
+            { value: "all", label: "Tất cả" },
+            ...apiUniqueCategories.map((category) => ({
+              value: category,
+              label: category,
+            })),
+          ];
+          
+          setCategories(apiCategoryList);
+          
+          // Set price range
+          const apiInitialMaxPrice = Math.max(...apiProductsData.map(product => product.price), 0);
+          const apiRoundedMaxPrice = Math.ceil(apiInitialMaxPrice / 100) * 100;
+          setMaxPrice(apiRoundedMaxPrice || 5000);
+          setPriceRange(apiRoundedMaxPrice);
+        } catch (apiErr) {
+          console.error("Failed to load categories from API as well:", apiErr);
+        }
       }
     };
 
@@ -90,220 +121,249 @@ const Products = () => {
       try {
         setLoading(true);
 
-        // Lấy dữ liệu từ server API
-        const response = await fetch('http://localhost:5678/api/database');
-        const data = await response.json();
-        const productsData = data.products || [];
+        // Try to get data from src/data/database.json first
+        try {
+          const response = await fetch('/data/database.json');
+          const data = await response.json();
+          const productsData = data.products || [];
+          
+          // Lọc sản phẩm theo từ khóa tìm kiếm nếu có
+          let filteredData = productsData;
+          if (keyword) {
+            const keywordLower = keyword.toLowerCase();
+            filteredData = productsData.filter(
+              (product) =>
+                product.name.toLowerCase().includes(keywordLower) ||
+                product.description.toLowerCase().includes(keywordLower)
+            );
+          }
 
-        // Lọc sản phẩm theo từ khóa tìm kiếm nếu có
-        let filteredData = productsData;
-        if (keyword) {
-          const keywordLower = keyword.toLowerCase();
-          filteredData = productsData.filter(
-            (product) =>
-              product.name.toLowerCase().includes(keywordLower) ||
-              product.category.toLowerCase().includes(keywordLower) ||
-              product.description?.toLowerCase().includes(keywordLower)
-          );
-        }
+          // Lọc sản phẩm theo danh mục nếu có
+          if (selectedCategory !== "all") {
+            filteredData = filteredData.filter(
+              (product) => product.category === selectedCategory
+            );
+          }
 
-        // Lọc sản phẩm theo danh mục từ URL nếu có
-        if (categoryParam && categoryParam !== "all") {
+          // Lọc sản phẩm theo giá
           filteredData = filteredData.filter(
-            (product) => product.category === categoryParam
+            (product) => product.price <= priceRange
           );
-          // Đặt selectedCategory để hiển thị đúng trong dropdown
-          setSelectedCategory(categoryParam);
-        }
 
-        setProducts(filteredData);
-        setFilteredProducts(filteredData);
-        setLoading(false);
+          setProducts(productsData);
+          setFilteredProducts(filteredData);
+          setError("");
+        } catch (localErr) {
+          console.error("Error loading from local file:", localErr);
+          
+          // Fallback to API
+          const apiResponse = await fetch('http://localhost:5678/api/database');
+          const apiData = await apiResponse.json();
+          const apiProductsData = apiData.products || [];
+          
+          // Lọc sản phẩm theo từ khóa tìm kiếm nếu có
+          let filteredData = apiProductsData;
+          if (keyword) {
+            const keywordLower = keyword.toLowerCase();
+            filteredData = apiProductsData.filter(
+              (product) =>
+                product.name.toLowerCase().includes(keywordLower) ||
+                product.description.toLowerCase().includes(keywordLower)
+            );
+          }
+
+          // Lọc sản phẩm theo danh mục nếu có
+          if (selectedCategory !== "all") {
+            filteredData = filteredData.filter(
+              (product) => product.category === selectedCategory
+            );
+          }
+
+          // Lọc sản phẩm theo giá
+          filteredData = filteredData.filter(
+            (product) => product.price <= priceRange
+          );
+
+          setProducts(apiProductsData);
+          setFilteredProducts(filteredData);
+          setError("");
+        }
       } catch (err) {
-        setError(err.message || "Có lỗi xảy ra khi tải dữ liệu sản phẩm");
+        console.error("Lỗi khi tải sản phẩm:", err);
+        setError("Không thể tải danh sách sản phẩm");
+      } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [keyword, categoryParam]);
+  }, [keyword, selectedCategory, priceRange]);
 
-  // Calculate max price for the current category and filter products
-  useEffect(() => {
-    if (products.length > 0) {
-      let filtered = products;
-      
-      // Filter by category
-      if (selectedCategory !== "all") {
-        filtered = filtered.filter((product) => product.category === selectedCategory);
-      }
-      
-      // Calculate max price for current filtered products
-      const categoryMaxPrice = Math.max(...filtered.map(product => product.price), 0);
-      
-      // Round up to nearest 100 for better user experience
-      const roundedMaxPrice = Math.ceil(categoryMaxPrice / 100) * 100;
-      setMaxPrice(roundedMaxPrice || 5000); // Default to 5000 if no products or all prices are 0
-      
-      // If current priceRange is higher than new maxPrice, reset it to maxPrice
-      if (priceRange > roundedMaxPrice) {
-        setPriceRange(roundedMaxPrice);
-      }
-      
-      // Filter by price range
-      filtered = filtered.filter((product) => product.price <= priceRange);
-      
-      setFilteredProducts(filtered);
+  // Xử lý khi thay đổi danh mục
+  const handleCategoryChange = (e) => {
+    const category = e.target.value;
+    setSelectedCategory(category);
+
+    // Cập nhật URL với tham số category
+    const params = new URLSearchParams(location.search);
+    if (category === "all") {
+      params.delete("category");
+    } else {
+      params.set("category", category);
     }
-  }, [selectedCategory, products, priceRange]);
+    navigate({ search: params.toString() });
 
-  // Hàm đặt lại bộ lọc
-  const resetFilters = () => {
-    setSelectedCategory("all");
-    
-    // Reset price range to the max price of all products
-    const allProductsMaxPrice = Math.max(...products.map(p => p.price), 0);
-    const roundedMaxPrice = Math.ceil(allProductsMaxPrice / 100) * 100;
-    setMaxPrice(roundedMaxPrice || 5000);
-    setPriceRange(roundedMaxPrice);
-    
-    // Update URL when filters are reset
-    navigate('/products');
+    // Tính toán giá tối đa cho danh mục được chọn
+    if (category === "all") {
+      const allProductsMaxPrice = Math.max(...products.map(p => p.price), 0);
+      const roundedMaxPrice = Math.ceil(allProductsMaxPrice / 100) * 100;
+      setMaxPrice(roundedMaxPrice || 5000);
+      setPriceRange(roundedMaxPrice);
+    } else {
+      const categoryProducts = products.filter(p => p.category === category);
+      if (categoryProducts.length > 0) {
+        const categoryMaxPrice = Math.max(...categoryProducts.map(p => p.price), 0);
+        const roundedCategoryMaxPrice = Math.ceil(categoryMaxPrice / 100) * 100;
+        setMaxPrice(roundedCategoryMaxPrice || 5000);
+        setPriceRange(roundedCategoryMaxPrice);
+      }
+    }
+  };
+
+  // Xử lý khi thay đổi khoảng giá
+  const handlePriceChange = (e) => {
+    setPriceRange(e.target.value);
   };
 
   return (
-    <Container>
-      <h1>All Products</h1>
-      <Row>
-        <Col md={3}>
-          <Card className="mb-4">
-            <Card.Body>
-              <h3>Filters</h3>
-              <Form>
-                <Form.Group className="mb-3">
-                  <Form.Label>Category</Form.Label>
-                  <Form.Select
-                    value={selectedCategory}
-                    onChange={(e) => {
-                      const newCategory = e.target.value;
-                      setSelectedCategory(newCategory);
-                      
-                      // When category changes, recalculate price range
-                      const categoryProducts = newCategory === "all" 
-                        ? products 
-                        : products.filter(p => p.category === newCategory);
-                        
-                      if (categoryProducts.length > 0) {
-                        const newMaxPrice = Math.max(...categoryProducts.map(p => p.price), 0);
-                        const roundedMaxPrice = Math.ceil(newMaxPrice / 100) * 100;
-                        setMaxPrice(roundedMaxPrice || 5000);
-                        setPriceRange(roundedMaxPrice); // Reset price range to max for new category
-                      }
-                      
-                      // Update URL when category changes
-                      if (newCategory === "all") {
-                        navigate('/products');
-                      } else {
-                        navigate(`/products?category=${encodeURIComponent(newCategory)}`);
-                      }
-                    }}
-                  >
-                    {categories.map((category) => (
-                      <option key={category.value} value={category.value}>
-                        {category.label}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-                <Form.Group className="mb-3">
-                  <Form.Label>Price Range: ${priceRange} (Max: ${maxPrice})</Form.Label>
-                  <Form.Range 
-                    min="0" 
-                    max={maxPrice} 
-                    step={Math.max(Math.ceil(maxPrice / 50), 1)} 
-                    value={priceRange} 
-                    onChange={(e) => setPriceRange(Number(e.target.value))}
-                  />
-                </Form.Group>
-                <Button variant="primary" onClick={resetFilters} type="button">
-                  Reset Filters
-                </Button>
-              </Form>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={9}>
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <span className="text-muted">
-                Hiển thị {filteredProducts.length} kết quả
-                {selectedCategory !== "all"
-                  ? ` trong danh mục "${
-                      categories.find((c) => c.value === selectedCategory)
-                        ?.label
-                    }"`
-                  : ""}
-              </span>
-            </div>
+    <Container className="py-3">
+      {loading ? (
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
           </div>
+        </div>
+      ) : error ? (
+        <div className="alert alert-danger">{error}</div>
+      ) : (
+        <>
+          <h1 className="mb-4">
+            {keyword
+              ? `Kết quả tìm kiếm cho "${keyword}"`
+              : selectedCategory !== "all"
+              ? `Sản phẩm ${selectedCategory}`
+              : "Tất cả sản phẩm"}
+          </h1>
 
-          {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
-          ) : error ? (
-            <div className="alert alert-danger">{error}</div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-5">
-              <i className="fas fa-search fa-3x text-muted mb-3"></i>
-              <h4>Không tìm thấy sản phẩm phù hợp</h4>
-              <p>Vui lòng thay đổi bộ lọc để tìm kiếm</p>
-              <Button variant="outline-primary" onClick={resetFilters}>
-                Đặt lại bộ lọc
-              </Button>
-            </div>
-          ) : (
-            <Row>
-              {filteredProducts.map((product) => (
-                <Col
-                  key={product.id}
-                  sm={12}
-                  md={6}
-                  lg={4}
-                  xl={3}
-                  className="mb-4"
+          <Row>
+            <Col md={3}>
+              <div className="mb-3">
+                <label className="form-label">Category</label>
+                <select
+                  className="form-select"
+                  value={selectedCategory}
+                  onChange={handleCategoryChange}
                 >
-                  <Card className="h-100">
-                    <Link to={`/products/${product.id}`}>
-                      <Card.Img src={product.image} variant="top" />
-                    </Link>
-                    <Card.Body className="d-flex flex-column">
-                      <Link
-                        to={`/products/${product.id}`}
-                        className="text-decoration-none"
-                      >
-                        <Card.Title as="div">
-                          <strong>{product.name}</strong>
-                        </Card.Title>
-                      </Link>
-                      <Card.Text as="h5" className="mt-auto">
-                        ${product.price}
-                      </Card.Text>
-                      <Link to={`/products/${product.id}`} className="w-100">
-                        <Button variant="primary" className="mt-2 w-100">
-                          View Details
-                        </Button>
-                      </Link>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          )}
-        </Col>
-      </Row>
+                  {categories.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">
+                  Price Range: ${priceRange}
+                </label>
+                <input
+                  type="range"
+                  className="form-range"
+                  min="0"
+                  max={maxPrice}
+                  step="100"
+                  value={priceRange}
+                  onChange={handlePriceChange}
+                />
+                <div className="d-flex justify-content-between">
+                  <span>$0</span>
+                  <span>${maxPrice}</span>
+                </div>
+              </div>
+            </Col>
+
+            <Col md={9}>
+              {filteredProducts.length === 0 ? (
+                <div className="alert alert-info">
+                  No products found matching your criteria
+                </div>
+              ) : (
+                <Row>
+                  {filteredProducts.map((product) => (
+                    <Col key={product.id} sm={12} md={6} lg={4} className="mb-4">
+                      <Card className="h-100 shadow-sm">
+                        <Link to={`/product/${product.id}`}>
+                          <Card.Img
+                            variant="top"
+                            src={product.image}
+                            alt={product.name}
+                            className="product-image"
+                          />
+                        </Link>
+                        <Card.Body className="d-flex flex-column">
+                          <Link
+                            to={`/product/${product.id}`}
+                            className="text-decoration-none"
+                          >
+                            <Card.Title as="h5">{product.name}</Card.Title>
+                          </Link>
+                          <Card.Text className="text-muted mb-0">
+                            {product.brand}
+                          </Card.Text>
+                          <Card.Text className="text-muted mb-2">
+                            Category: {product.category}
+                          </Card.Text>
+                          <div className="d-flex align-items-center mb-2">
+                            <div className="ratings">
+                              {[...Array(5)].map((_, i) => (
+                                <i
+                                  key={i}
+                                  className={
+                                    i < Math.floor(product.rating)
+                                      ? "fas fa-star"
+                                      : i < product.rating
+                                      ? "fas fa-star-half-alt"
+                                      : "far fa-star"
+                                  }
+                                  style={{ color: "#ffc107" }}
+                                ></i>
+                              ))}
+                            </div>
+                            <span className="ms-2 text-muted">
+                              ({product.numReviews} reviews)
+                            </span>
+                          </div>
+                          <Card.Text className="price-text mt-auto mb-2">
+                            ${product.price.toFixed(2)}
+                          </Card.Text>
+                          <div className="d-grid">
+                            <Link
+                              to={`/product/${product.id}`}
+                              className="btn btn-primary"
+                            >
+                              View Details
+                            </Link>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              )}
+            </Col>
+          </Row>
+        </>
+      )}
     </Container>
   );
 };

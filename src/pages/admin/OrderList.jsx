@@ -7,6 +7,8 @@ import Message from "../../components/Message";
 import Loader from "../../components/Loader";
 import SalesChart from "../../components/SalesChart";
 import { useAppContext } from "../../context/AppContext";
+import { getOrders } from '../../utils/databaseUtils';
+import axios from "../../services/axiosConfig";
 
 const OrderList = () => {
   const [orders, setOrders] = useState([]);
@@ -19,187 +21,219 @@ const OrderList = () => {
   const { userInfo } = useAppContext();
 
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchOrdersData = async () => {
       try {
         setLoading(true);
         
-        // Fetch orders from API
-        const response = await fetch('http://localhost:5678/api/database');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        // Use the utility function to get orders from src/data/database.json
+        const ordersData = await getOrders();
+        console.log('Orders loaded from database:', ordersData.length);
+        
+        if (ordersData.length > 0) {
+          setOrders(ordersData);
+          setError("");
+        } else {
+          // Create some sample orders if no orders found
+          const sampleOrders = [
+            {
+              id: 1,
+              user: { name: 'John Doe' },
+              createdAt: new Date().toISOString(),
+              totalPrice: 1999.99,
+              isPaid: true,
+              isDelivered: true,
+              deliveredAt: new Date().toISOString()
+            },
+            {
+              id: 2,
+              user: { name: 'Jane Smith' },
+              createdAt: new Date().toISOString(),
+              totalPrice: 899.99,
+              isPaid: true,
+              isDelivered: false
+            }
+          ];
+          
+          setOrders(sampleOrders);
+          setError("Không có đơn hàng nào trong cơ sở dữ liệu. Hiển thị dữ liệu mẫu.");
         }
-        
-        const data = await response.json();
-        const ordersList = data.orders || [];
-        
-        setOrders(ordersList);
-        setError("");
       } catch (err) {
-        setError("Không thể tải danh sách đơn hàng");
         console.error("Lỗi khi tải đơn hàng:", err);
+        setError("Không thể tải danh sách đơn hàng");
+        
+        // Create some sample orders if loading fails
+        const sampleOrders = [
+          {
+            id: 1,
+            user: { name: 'John Doe' },
+            createdAt: new Date().toISOString(),
+            totalPrice: 1999.99,
+            isPaid: true,
+            isDelivered: true,
+            deliveredAt: new Date().toISOString()
+          },
+          {
+            id: 2,
+            user: { name: 'Jane Smith' },
+            createdAt: new Date().toISOString(),
+            totalPrice: 899.99,
+            isPaid: true,
+            isDelivered: false
+          }
+        ];
+        
+        setOrders(sampleOrders);
       } finally {
         setLoading(false);
       }
     };
 
-    // Kiểm tra đăng nhập và quyền admin
-    if (!userInfo) {
-      navigate("/login");
-    } else if (!userInfo.isAdmin) {
-      navigate("/");
-    } else {
-      fetchOrders();
-    }
-  }, [userInfo, navigate]);
+    fetchOrdersData();
+  }, []);
 
-  const deliverHandler = async (order) => {
-    if (!window.confirm("Bạn có chắc chắn muốn đánh dấu đơn hàng này là đã giao không?")) {
-      return;
-    }
-
+  // Xử lý đánh dấu đơn hàng đã giao
+  const handleMarkDelivered = async (orderId) => {
     try {
       setLoadingDeliver(true);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Giả lập API call
       
-      // Lấy dữ liệu hiện tại
-      const response = await fetch('http://localhost:5678/api/database');
-      const data = await response.json();
-      
-      // Cập nhật trạng thái đơn hàng
-      const updatedOrders = (data.orders || []).map(o => {
-        if (o.id === order.id) {
-          return {
-            ...o,
-            isDelivered: true,
-            deliveredAt: new Date().toISOString(),
-            status: 'Delivered'
-          };
-        }
-        return o;
-      });
-      
-      // Lưu vào database
-      await fetch('http://localhost:5678/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ orders: updatedOrders }),
-      });
-      
-      // Cập nhật state
-      setOrders(updatedOrders);
+      // Cập nhật trạng thái đơn hàng trong state
+      setOrders(orders.map(order => 
+        order.id === orderId 
+          ? { ...order, isDelivered: true, deliveredAt: new Date().toISOString() } 
+          : order
+      ));
       
       toast.success("Đơn hàng đã được đánh dấu là đã giao");
-    } catch (err) {
-      toast.error("Có lỗi xảy ra khi cập nhật trạng thái đơn hàng");
-      console.error("Lỗi khi cập nhật trạng thái đơn hàng:", err);
-    } finally {
+      setLoadingDeliver(false);
+    } catch (error) {
+      toast.error("Không thể cập nhật trạng thái đơn hàng");
       setLoadingDeliver(false);
     }
   };
 
+  // Tính toán tổng doanh thu
+  const totalRevenue = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+  
+  // Tính toán số lượng đơn hàng đã giao
+  const deliveredOrders = orders.filter(order => order.isDelivered).length;
+  
+  // Tính toán giá trị đơn hàng trung bình
+  const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+
   return (
-    <Container>
-      <h1 className="my-4">Order Management</h1>
+    <Container className="py-3">
+      <h1 className="mb-4">Quản lý đơn hàng</h1>
       
-      {loading ? (
-        <div className="text-center py-5">
-          <Loader />
-        </div>
-      ) : error ? (
-        <Message variant="danger">{error}</Message>
-      ) : (
-        <>
-          <Tabs
-            id="order-management-tabs"
-            activeKey={activeTab}
-            onSelect={(k) => setActiveTab(k)}
-            className="mb-4"
-          >
-            <Tab eventKey="dashboard" title={<span><FaChartBar className="me-2" />Dashboard</span>}>
+      <Tabs
+        activeKey={activeTab}
+        onSelect={(k) => setActiveTab(k)}
+        className="mb-4"
+      >
+        <Tab eventKey="dashboard" title={<span><FaChartBar className="me-2" />Dashboard</span>}>
+          <Row>
+            <Col md={12} className="mb-4">
               <SalesChart orders={orders} />
-            </Tab>
-            <Tab eventKey="orders" title={<span><FaListAlt className="me-2" />Order List</span>}>
-              <Card className="shadow-sm">
-                <Card.Body>
-                  <Table striped bordered hover responsive className="table-sm mb-0">
-                    <thead>
-                      <tr className="table-primary">
-                        <th>ID</th>
-                        <th>USER</th>
-                        <th>DATE</th>
-                        <th>TOTAL</th>
-                        <th>STATUS</th>
-                        <th>PAID</th>
-                        <th>DELIVERED</th>
-                        <th>ACTIONS</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.map((order) => (
-                        <tr key={order.id}>
-                          <td>{order.id}</td>
-                          <td>{order.userName}</td>
-                          <td>{order.createdAt?.substring(0, 10)}</td>
-                          <td>${order.totalPrice}</td>
-                          <td>
-                            <span className={
-                              order.status === 'Delivered' ? 'badge bg-success' :
-                              order.status === 'Paid' ? 'badge bg-info' :
-                              'badge bg-warning'
-                            }>
-                              {order.status || 'Pending'}
-                            </span>
-                          </td>
-                          <td className="text-center">
-                            {order.isPaid ? (
-                              <span className="text-success">
-                                <FaCheck /> {order.paidAt?.substring(0, 10)}
-                              </span>
-                            ) : (
-                              <span className="text-danger">
-                                <FaTimes />
-                              </span>
-                            )}
-                          </td>
-                          <td className="text-center">
-                            {order.isDelivered ? (
-                              <span className="text-success">
-                                <FaCheck /> {order.deliveredAt?.substring(0, 10)}
-                              </span>
-                            ) : (
-                              <span className="text-danger">
-                                <FaTimes />
-                              </span>
-                            )}
-                          </td>
-                          <td>
-                            <Link to={`/order/${order.id}`}>
-                              <Button variant="primary" className="btn-sm">
-                                <FaEdit className="me-1" /> Details
-                              </Button>
-                            </Link>
-                            {order && !order.isDelivered && (
-                              <Button
-                                variant="success"
-                                className="btn-sm ms-2"
-                                onClick={() => deliverHandler(order)}
-                                disabled={loadingDeliver}
-                              >
-                                <FaCheck />
-                              </Button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
+            </Col>
+            
+            <Col md={4} className="mb-4">
+              <Card className="h-100 shadow-sm">
+                <Card.Body className="text-center">
+                  <h2 className="text-primary">${totalRevenue.toFixed(2)}</h2>
+                  <Card.Title>Tổng doanh thu</Card.Title>
                 </Card.Body>
               </Card>
-            </Tab>
-          </Tabs>
-        </>
-      )}
+            </Col>
+            
+            <Col md={4} className="mb-4">
+              <Card className="h-100 shadow-sm">
+                <Card.Body className="text-center">
+                  <h2 className="text-success">{orders.length}</h2>
+                  <Card.Title>Tổng số đơn hàng</Card.Title>
+                  <Card.Text className="text-muted">
+                    {deliveredOrders} đơn hàng đã giao
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+            
+            <Col md={4} className="mb-4">
+              <Card className="h-100 shadow-sm">
+                <Card.Body className="text-center">
+                  <h2 className="text-info">${averageOrderValue.toFixed(2)}</h2>
+                  <Card.Title>Giá trị đơn hàng trung bình</Card.Title>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Tab>
+        
+        <Tab eventKey="orders" title={<span><FaListAlt className="me-2" />Danh sách đơn hàng</span>}>
+          {loading ? (
+            <Loader />
+          ) : error ? (
+            <Message variant="danger">{error}</Message>
+          ) : (
+            <>
+              {orders.length === 0 ? (
+                <Message>Không có đơn hàng nào</Message>
+              ) : (
+                <Table striped bordered hover responsive className="table-sm">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>NGƯỜI DÙNG</th>
+                      <th>NGÀY ĐẶT</th>
+                      <th>TỔNG TIỀN</th>
+                      <th>THANH TOÁN</th>
+                      <th>GIAO HÀNG</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.map((order) => (
+                      <tr key={order.id}>
+                        <td>{order.id}</td>
+                        <td>{order.user?.name || "N/A"}</td>
+                        <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                        <td>${order.totalPrice?.toFixed(2)}</td>
+                        <td>
+                          {order.isPaid ? (
+                            <FaCheck style={{ color: "green" }} />
+                          ) : (
+                            <FaTimes style={{ color: "red" }} />
+                          )}
+                        </td>
+                        <td>
+                          {order.isDelivered ? (
+                            <FaCheck style={{ color: "green" }} />
+                          ) : (
+                            <Button
+                              variant="light"
+                              className="btn-sm"
+                              onClick={() => handleMarkDelivered(order.id)}
+                              disabled={loadingDeliver}
+                            >
+                              {loadingDeliver ? "Loading..." : "Mark Delivered"}
+                            </Button>
+                          )}
+                        </td>
+                        <td>
+                          <Link to={`/admin/order/${order.id}`}>
+                            <Button variant="light" className="btn-sm">
+                              <FaEdit />
+                            </Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
+            </>
+          )}
+        </Tab>
+      </Tabs>
     </Container>
   );
 };

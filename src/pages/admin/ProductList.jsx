@@ -15,6 +15,7 @@ import {
   InputGroup,
 } from "react-bootstrap";
 import { toast } from "react-toastify";
+import { getCategories as fetchCategories, getBrands as fetchBrands, getProducts as fetchProducts } from '../../utils/databaseUtils';
 import {
   FaEdit,
   FaTrash,
@@ -45,25 +46,32 @@ const ProductList = () => {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
 
-  // Load categories and brands from database
+  // Use utility functions for database operations
+
+  // Fetch categories and brands from database.json in src/data directory
   useEffect(() => {
-    const loadCategoriesAndBrands = async () => {
+    const fetchCategoriesAndBrands = async () => {
       try {
-        const response = await fetch('http://localhost:5678/api/database');
-        const data = await response.json();
-        
-        // Get unique categories and brands from products
-        const uniqueCategories = [...new Set(data.products.map(p => p.category))];
-        const uniqueBrands = [...new Set(data.products.map(p => p.brand))];
-        
+        // Get categories using the utility function
+        const uniqueCategories = await fetchCategories();
+        console.log('Categories loaded:', uniqueCategories);
         setCategories(uniqueCategories);
+
+        // Get brands using the utility function
+        const uniqueBrands = await fetchBrands();
+        console.log('Brands loaded:', uniqueBrands);
         setBrands(uniqueBrands);
-      } catch (err) {
-        console.error("Error loading categories and brands:", err);
+      } catch (error) {
+        console.error('Error fetching categories and brands:', error);
+        toast.error('Failed to load categories and brands');
+        
+        // Set default values if loading fails
+        setCategories(['Gaming PC', 'Office PC', 'Workstation']);
+        setBrands(['GamingTech', 'OfficePro', 'CreatorPro']);
       }
     };
-    
-    loadCategoriesAndBrands();
+
+    fetchCategoriesAndBrands();
   }, []);
   const [activeTab, setActiveTab] = useState("products");
 
