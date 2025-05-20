@@ -1,0 +1,66 @@
+/* Custom styles for owl-carousel replacement */
+.owl-stage-outer {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -10px;
+}
+
+.owl-stage-outer .card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+}
+
+.owl-stage-outer .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.owl-stage-outer .card-img-top {
+  height: 200px;
+  object-fit: contain;
+  padding: 1rem;
+}
+
+/* Make sure links inside cards don't have the default underline */
+.owl-stage-outer a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Add some spacing between items */
+.owl-stage-outer .col,
+.owl-stage-outer [class*="col-"] {
+  padding: 0 10px;
+}
+
+/* Homepage Slider Left styles */
+.homepage-slider-left .list-group-item {
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+}
+
+.homepage-slider-left .list-group-item:hover {
+  background-color: #f8f9fa;
+  border-left: 3px solid #007bff;
+  transform: translateX(5px);
+}
+
+.homepage-slider-left .list-group-item i {
+  width: 20px;
+  text-align: center;
+  color: #007bff;
+}
+
+.homepage-main-carousel .carousel-item img {
+  border-radius: 5px;
+  transition: transform 0.3s ease;
+}
+
+.homepage-main-carousel .carousel-item:hover img {
+  transform: scale(1.02);
+}
+
+.homepage-main-carousel a {
+  text-decoration: none;
+  color: white;
+}
