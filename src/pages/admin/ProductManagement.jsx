@@ -18,8 +18,18 @@ const ProductManagement = () => {
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('add'); // 'add' | 'edit'
-  const [currentProduct, setCurrentProduct] = useState({ name: '', price: 0, category: '', brand: '', countInStock: 0, description: '' });
+  const [currentProduct, setCurrentProduct] = useState({ 
+    name: '', 
+    price: 0, 
+    category: '', 
+    brand: '', 
+    countInStock: 0, 
+    description: '',
+    image: '' 
+  });
   const [saving, setSaving] = useState(false);
+  const [imagePreview, setImagePreview] = useState('');
+  const [uploading, setUploading] = useState(false);
   
   // New state for category and brand modals
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -96,17 +106,74 @@ const ProductManagement = () => {
     }
   };
 
+  // Handle image upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file ảnh');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Kích thước file không được vượt quá 5MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await axios.post(`${API_BASE}/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.url) {
+        const imageUrl = response.data.url;
+        setCurrentProduct(prev => ({
+          ...prev,
+          image: imageUrl
+        }));
+        setImagePreview(imageUrl);
+        console.log('Uploaded image URL:', imageUrl); // Debug log
+      }
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      alert('Lỗi khi tải lên ảnh. Vui lòng thử lại.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   // Modal handlers
   const openAddModal = () => {
     setModalType('add');
-    setCurrentProduct({ name: '', price: 0, category: '', brand: '', countInStock: 0, description: '' });
+    setCurrentProduct({ 
+      name: '', 
+      price: 0, 
+      category: '', 
+      brand: '', 
+      countInStock: 0, 
+      description: '',
+      image: '' 
+    });
+    setImagePreview('');
     setShowModal(true);
   };
+
   const openEditModal = (product) => {
     setModalType('edit');
     setCurrentProduct({ ...product });
+    setImagePreview(product.image || '');
     setShowModal(true);
   };
+
   const closeModal = () => setShowModal(false);
   
   // Category and Brand modal handlers
@@ -130,6 +197,11 @@ const ProductManagement = () => {
 
   // Save product (add or edit)
   const handleSave = async () => {
+    if (!currentProduct.name || !currentProduct.price || !currentProduct.category || !currentProduct.brand) {
+      alert('Vui lòng điền đầy đủ thông tin sản phẩm');
+      return;
+    }
+
     setSaving(true);
     try {
       if (modalType === 'add') {
@@ -143,6 +215,8 @@ const ProductManagement = () => {
           id: Date.now().toString(),
           createdAt: new Date().toISOString()
         };
+        
+        console.log('Saving new product:', newProduct); // Debug log
         
         // Update products array
         const updatedProducts = [...existingProducts, newProduct];
@@ -163,6 +237,8 @@ const ProductManagement = () => {
             ...currentProduct,
             updatedAt: new Date().toISOString()
           };
+          
+          console.log('Updating product:', existingProducts[productIndex]); // Debug log
           
           // Send the updated array to the API
           await axios.post(`${API_BASE}/products`, { products: existingProducts });
@@ -382,71 +458,151 @@ const ProductManagement = () => {
       )}
       
       {/* Modal thêm/sửa sản phẩm */}
-      <Modal show={showModal} onHide={closeModal}>
+      <Modal show={showModal} onHide={closeModal} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>{modalType === 'add' ? 'Thêm sản phẩm' : 'Sửa sản phẩm'}</Modal.Title>
+          <Modal.Title>{modalType === 'add' ? 'Thêm sản phẩm mới' : 'Chỉnh sửa sản phẩm'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Tên sản phẩm</Form.Label>
-              <Form.Control
-                type="text"
-                value={currentProduct.name}
-                onChange={e => setCurrentProduct({ ...currentProduct, name: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Giá</Form.Label>
-              <Form.Control
-                type="number"
-                value={currentProduct.price}
-                onChange={e => setCurrentProduct({ ...currentProduct, price: Number(e.target.value) })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Danh mục</Form.Label>
-              <Form.Select
-                value={currentProduct.category}
-                onChange={e => setCurrentProduct({ ...currentProduct, category: e.target.value })}
-              >
-                <option value="">Chọn danh mục</option>
-                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-              </Form.Select>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Thương hiệu</Form.Label>
-              <Form.Select
-                value={currentProduct.brand}
-                onChange={e => setCurrentProduct({ ...currentProduct, brand: e.target.value })}
-              >
-                <option value="">Chọn thương hiệu</option>
-                {brands.map(b => <option key={b} value={b}>{b}</option>)}
-              </Form.Select>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Tồn kho</Form.Label>
-              <Form.Control
-                type="number"
-                value={currentProduct.countInStock}
-                onChange={e => setCurrentProduct({ ...currentProduct, countInStock: Number(e.target.value) })}
-              />
-            </Form.Group>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Tên sản phẩm</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={currentProduct.name}
+                    onChange={(e) => setCurrentProduct({ ...currentProduct, name: e.target.value })}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Giá</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={currentProduct.price}
+                    onChange={(e) => setCurrentProduct({ ...currentProduct, price: Number(e.target.value) })}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Danh mục</Form.Label>
+                  <div className="d-flex">
+                    <Form.Select
+                      value={currentProduct.category}
+                      onChange={(e) => setCurrentProduct({ ...currentProduct, category: e.target.value })}
+                      required
+                    >
+                      <option value="">Chọn danh mục</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <Button variant="outline-secondary" className="ms-2" onClick={openCategoryModal}>
+                      <i className="fas fa-plus"></i>
+                    </Button>
+                  </div>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Thương hiệu</Form.Label>
+                  <div className="d-flex">
+                    <Form.Select
+                      value={currentProduct.brand}
+                      onChange={(e) => setCurrentProduct({ ...currentProduct, brand: e.target.value })}
+                      required
+                    >
+                      <option value="">Chọn thương hiệu</option>
+                      {brands.map((br) => (
+                        <option key={br} value={br}>
+                          {br}
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <Button variant="outline-secondary" className="ms-2" onClick={openBrandModal}>
+                      <i className="fas fa-plus"></i>
+                    </Button>
+                  </div>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Số lượng trong kho</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={currentProduct.countInStock}
+                    onChange={(e) => setCurrentProduct({ ...currentProduct, countInStock: Number(e.target.value) })}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Ảnh sản phẩm</Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                  />
+                  {uploading && <div className="mt-2"><Spinner animation="border" size="sm" /> Đang tải lên...</div>}
+                </Form.Group>
+              </Col>
+            </Row>
+
             <Form.Group className="mb-3">
               <Form.Label>Mô tả</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
                 value={currentProduct.description}
-                onChange={e => setCurrentProduct({ ...currentProduct, description: e.target.value })}
+                onChange={(e) => setCurrentProduct({ ...currentProduct, description: e.target.value })}
               />
             </Form.Group>
+
+            {imagePreview && (
+              <div className="mb-3">
+                <Form.Label>Xem trước ảnh</Form.Label>
+                <div>
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'contain' }} 
+                    onError={(e) => {
+                      console.error('Image load error:', e);
+                      e.target.src = '/images/placeholder.png';
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={closeModal}>Hủy</Button>
+          <Button variant="secondary" onClick={closeModal}>
+            Hủy
+          </Button>
           <Button variant="primary" onClick={handleSave} disabled={saving}>
-            {saving ? 'Đang lưu...' : 'Lưu'}
+            {saving ? (
+              <>
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                {' '}Đang lưu...
+              </>
+            ) : (
+              'Lưu'
+            )}
           </Button>
         </Modal.Footer>
       </Modal>

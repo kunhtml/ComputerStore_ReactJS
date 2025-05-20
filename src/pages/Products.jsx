@@ -32,8 +32,8 @@ const Products = () => {
         const categoryList = [
           { value: "all", label: "Tất cả" },
           ...(data.categories || []).map((category) => ({
-            value: category.name,
-            label: category.name,
+            value: category,
+            label: category,
           })),
         ];
         setCategories(categoryList);
@@ -43,7 +43,6 @@ const Products = () => {
       }
     };
     fetchCategories();
-    // eslint-disable-next-line
   }, [categoryParam]);
 
   // Lấy danh sách sản phẩm từ API
@@ -58,8 +57,8 @@ const Products = () => {
           throw new Error("No products found");
         }
         const highestPrice = Math.max(...productsData.map((product) => product.price));
-        setMaxPrice(Math.ceil(highestPrice));
-        setPriceRange(Math.ceil(highestPrice));
+        setMaxPrice(highestPrice);
+        setPriceRange(highestPrice);
         const formattedProducts = productsData.map((product) => ({
           ...product,
           _id: product.id?.toString() || product._id?.toString() || '',
@@ -109,7 +108,7 @@ const Products = () => {
       params.set("category", category);
     }
     navigate({
-      pathname: keyword ? `/search/${keyword}` : "/",
+      pathname: keyword ? `/search/${keyword}` : "/products",
       search: params.toString(),
     });
   };
@@ -141,11 +140,11 @@ const Products = () => {
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Giá tối đa: ${priceRange}</Form.Label>
+            <Form.Label>Giá tối đa: {priceRange.toLocaleString('vi-VN')}₫</Form.Label>
             <Form.Range
               min={0}
               max={maxPrice}
-              step={10}
+              step={1}
               value={priceRange}
               onChange={handlePriceChange}
             />
@@ -173,7 +172,7 @@ const Products = () => {
               filteredProducts.map((product) => (
                 <Col key={product._id} sm={12} md={6} lg={4} xl={3}>
                   <Card className="my-3 p-3 rounded product-card">
-                    <Link to={`/product/${product.id}`}>
+                    <Link to={`/products/${product._id}`}>
                       <Card.Img
                         src={product.image}
                         variant="top"
@@ -182,7 +181,7 @@ const Products = () => {
                     </Link>
                     <Card.Body>
                       <Link
-                        to={`/product/${product.id}`}
+                        to={`/products/${product._id}`}
                         className="text-decoration-none"
                       >
                         <Card.Title as="div" className="product-title">
@@ -212,7 +211,7 @@ const Products = () => {
                         </div>
                       </Card.Text>
                       <Card.Text as="h3" className="product-price">
-                        ${product.price}
+                        {product.price.toLocaleString('vi-VN')}₫
                       </Card.Text>
                       <div className="d-flex justify-content-between align-items-center mt-3">
                         <div className="product-brand">
@@ -225,7 +224,7 @@ const Products = () => {
                         </div>
                       </div>
                       <div className="d-grid gap-2 mt-3">
-                        <Link to={`/product/${product.id}`}>
+                        <Link to={`/products/${product._id}`}>
                           <Button variant="primary" className="w-100">
                             Xem chi tiết
                           </Button>

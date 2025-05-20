@@ -51,7 +51,20 @@
         }
       ],
       "rating": 5,
-      "numReviews": 2
+      "numReviews": 2,
+      "image": "/uploads/1747758831918-36849797.png",
+      "updatedAt": "2025-05-20T16:33:53.328Z"
+    },
+    {
+      "name": "test2",
+      "price": 1123123,
+      "category": "All In One",
+      "brand": "DELL",
+      "countInStock": 1,
+      "description": "123",
+      "image": "/uploads/1747759262015-282044730.jpg",
+      "id": "1747759264477",
+      "createdAt": "2025-05-20T16:41:04.477Z"
     }
   ],
   "orders": [

@@ -3,14 +3,41 @@ const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const multer = require("multer");
 const { readDatabase, writeDatabase, databasePath } = require('./utils/database');
 
 const app = express();
 const PORT = process.env.PORT || 5678;
 
+// Configure multer for image upload
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads/');
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    // Accept images only
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+      return cb(new Error('Only image files are allowed!'), false);
+    }
+    cb(null, true);
+  }
+});
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/uploads', express.static('public/uploads'));
 
 // Log database path
 console.log("Database path:", databasePath);
@@ -297,6 +324,22 @@ app.get("/api/categories", (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Image upload endpoint
+app.post("/api/upload", upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+    
+    // Return the full URL of the uploaded image
+    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    res.json({ url: imageUrl });
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).json({ error: "Error uploading file" });
   }
 });
 

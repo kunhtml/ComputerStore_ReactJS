@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Row, Col, Card, Button, Carousel, ListGroup } from "react-bootstrap";
+import { Row, Col, Card, Button, ListGroup } from "react-bootstrap";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
+import axios from 'axios';
+
+const API_BASE = 'http://localhost:5678/api';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [dbCategories, setDbCategories] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
 
   // Lấy danh mục từ API
   useEffect(() => {
@@ -27,102 +31,30 @@ const Home = () => {
 
   // Lấy sản phẩm nổi bật từ API
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchFeaturedProducts = async () => {
       try {
-        setLoading(true);
-        const response = await fetch('http://localhost:5678/api/products?featured=true');
-        const data = await response.json();
-        setProducts(data.products || []);
-        setLoading(false);
+        const response = await axios.get(`${API_BASE}/products`);
+        const allProducts = response.data.products || [];
+        
+        // Lấy 5 sản phẩm ngẫu nhiên
+        const randomProducts = allProducts
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 5);
+        
+        setFeaturedProducts(randomProducts);
       } catch (err) {
-        setError("Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
+        console.error('Error fetching featured products:', err);
+        setError('Không thể tải sản phẩm nổi bật');
+      } finally {
         setLoading(false);
       }
     };
-    fetchProducts();
+
+    fetchFeaturedProducts();
   }, []);
-
-  // Hero banner data
-  const heroSlides = [
-    {
-      id: 1,
-      title: "High Performance Gaming PCs",
-      description:
-        "Experience the ultimate gaming performance with our latest gaming rigs",
-      image: "https://via.placeholder.com/1200x400?text=Gaming+PCs",
-      buttonText: "Shop Now",
-      buttonLink: "/products?category=gaming",
-    },
-    {
-      id: 2,
-      title: "Powerful Workstations",
-      description: "Boost your productivity with our high-end workstations",
-      image: "https://via.placeholder.com/1200x400?text=Workstations",
-      buttonText: "Explore",
-      buttonLink: "/products?category=workstation",
-    },
-    {
-      id: 3,
-      title: "Custom Builds",
-      description: "Build your dream PC with our custom configuration options",
-      image: "https://via.placeholder.com/1200x400?text=Custom+Builds",
-      buttonText: "Customize",
-      buttonLink: "/custom-build",
-    },
-  ];
-
-  // Featured categories
-  const categories = [
-    {
-      id: 1,
-      name: "Gaming",
-      slug: "gaming",
-      image: "https://via.placeholder.com/300x200?text=Gaming",
-    },
-    {
-      id: 2,
-      name: "Workstation",
-      slug: "workstation",
-      image: "https://via.placeholder.com/300x200?text=Workstation",
-    },
-    {
-      id: 3,
-      name: "Budget",
-      slug: "budget",
-      image: "https://via.placeholder.com/300x200?text=Budget",
-    },
-    {
-      id: 4,
-      name: "Accessories",
-      slug: "accessories",
-      image: "https://via.placeholder.com/300x200?text=Accessories",
-    },
-  ];
 
   return (
     <>
-      {/* Hero Carousel */}
-      <Carousel fade className="mb-5">
-        {heroSlides.map((slide) => (
-          <Carousel.Item key={slide.id}>
-            <Link to={slide.buttonLink}>
-              <img
-                className="d-block w-100"
-                src={slide.image}
-                alt={slide.title}
-              />
-              <Carousel.Caption className="bg-dark bg-opacity-50 p-4 rounded">
-                <h2>{slide.title}</h2>
-                <p>{slide.description}</p>
-                <Button as={Link} to={slide.buttonLink} variant="primary">
-                  {slide.buttonText}
-                </Button>
-              </Carousel.Caption>
-            </Link>
-          </Carousel.Item>
-        ))}
-      </Carousel>
-
       {/* Homepage Slider Left */}
       <h2 className="mb-4">Danh Mục Sản Phẩm</h2>
       <div className="mb-5">
@@ -181,27 +113,50 @@ const Home = () => {
           <Col md={9}>
             <Card className="border-0 shadow-sm">
               <Card.Body>
-                <Carousel
-                  fade
-                  indicators={false}
-                  className="homepage-main-carousel"
-                >
-                  {categories.slice(0, 3).map((category) => (
-                    <Carousel.Item key={category.id}>
-                      <Link to={`/products?category=${category.name}`}>
-                        <img
-                          className="d-block w-100"
-                          src={category.image}
-                          alt={category.name}
-                          style={{ height: "350px", objectFit: "cover" }}
-                        />
-                        <Carousel.Caption className="bg-dark bg-opacity-50 p-3 rounded">
-                          <h3>{category.name}</h3>
-                        </Carousel.Caption>
-                      </Link>
-                    </Carousel.Item>
-                  ))}
-                </Carousel>
+                <div id="mainCarousel" className="homepage-main-carousel carousel slide carousel-fade" data-bs-ride="carousel">
+                  <div className="carousel-inner">
+                    {featuredProducts.map((product, index) => (
+                      <div 
+                        key={product.id} 
+                        className={`carousel-item ${index === 0 ? 'active' : ''}`}
+                      >
+                        <Link to={`/products/${product.id}`}>
+                          <img
+                            className="d-block w-100"
+                            src={product.image || 'https://via.placeholder.com/300x200?text=No+Image'}
+                            alt={product.name}
+                            style={{ height: '350px', objectFit: 'cover' }}
+                            onError={(e) => {
+                              e.target.src = 'https://via.placeholder.com/300x200?text=No+Image';
+                            }}
+                          />
+                          <div className="carousel-caption bg-dark bg-opacity-50 p-3 rounded">
+                            <h3>{product.name}</h3>
+                            <p className="mb-0">{product.price.toLocaleString('vi-VN')}₫</p>
+                          </div>
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    className="carousel-control-prev"
+                    type="button"
+                    data-bs-target="#mainCarousel"
+                    data-bs-slide="prev"
+                  >
+                    <span className="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span className="visually-hidden">Previous</span>
+                  </button>
+                  <button
+                    className="carousel-control-next"
+                    type="button"
+                    data-bs-target="#mainCarousel"
+                    data-bs-slide="next"
+                  >
+                    <span className="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span className="visually-hidden">Next</span>
+                  </button>
+                </div>
               </Card.Body>
             </Card>
           </Col>
