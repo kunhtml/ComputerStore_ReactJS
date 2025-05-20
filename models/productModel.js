@@ -40,13 +40,23 @@ function getAllProducts({ q, category, brand, page = 1, limit = 10, sort }) {
 
 function getProductById(id) {
   const db = readDatabase();
-  return db.products.find(p => p.id === id);
+  const product = db.products.find(p => p.id === id);
+  
+  if (product) {
+    // Ensure product has a reviews array
+    if (!product.reviews) {
+      product.reviews = [];
+    }
+  }
+  
+  return product;
 }
 
 function createProduct(product) {
   const db = readDatabase();
   product.id = Date.now().toString();
   product.createdAt = new Date().toISOString();
+  product.reviews = [];
   db.products.push(product);
   writeDatabase(db);
   return product;

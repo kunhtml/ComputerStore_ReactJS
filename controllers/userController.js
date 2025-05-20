@@ -1,4 +1,5 @@
 const userModel = require('../models/userModel');
+const { readDatabase, writeDatabase } = require('../models/database');
 
 // Simple password hashing function
 const hashPassword = (password) => {
@@ -128,6 +129,34 @@ exports.loginUser = (req, res) => {
     const { password: pwd, ...userWithoutPassword } = user;
     
     res.json(userWithoutPassword);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Add bulk import users function
+exports.bulkImportUsers = (req, res) => {
+  try {
+    const { users } = req.body;
+    
+    if (!users || !Array.isArray(users)) {
+      return res.status(400).json({ error: 'Invalid users data' });
+    }
+    
+    const db = readDatabase();
+    
+    // Hash passwords before saving
+    const processedUsers = users.map(user => ({
+      ...user,
+      password: user.password ? hashPassword(user.password) : user.password,
+      id: user.id || Date.now().toString(),
+      createdAt: user.createdAt || new Date().toISOString()
+    }));
+    
+    db.users = processedUsers;
+    writeDatabase(db);
+    
+    res.json({ success: true, count: users.length });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

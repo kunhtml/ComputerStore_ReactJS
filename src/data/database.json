@@ -13,6 +13,22 @@
       "password": "hashed_admin123",
       "isAdmin": true,
       "createdAt": "2023-05-21T10:00:00.000Z"
+    },
+    {
+      "name": "Test User",
+      "email": "test@example.com",
+      "password": "hashed_password123",
+      "isAdmin": false,
+      "id": "1747751566132",
+      "createdAt": "2025-05-20T14:32:46.132Z"
+    },
+    {
+      "name": "max",
+      "email": "max@example.com",
+      "password": "hashed_maxmax",
+      "isAdmin": false,
+      "id": "1747751610706",
+      "createdAt": "2025-05-20T14:33:30.706Z"
     }
   ],
   "products": [
@@ -24,7 +40,16 @@
       "countInStock": 1,
       "description": "test1",
       "id": "1747750795202",
-      "createdAt": "2025-05-20T14:19:55.202Z"
+      "createdAt": "2025-05-20T14:19:55.202Z",
+      "reviews": [
+        {
+          "name": "max",
+          "rating": 5,
+          "comment": "",
+          "createdAt": "2025-05-20T14:49:43.088Z",
+          "id": "1747752583088"
+        }
+      ]
     }
   ],
   "orders": [],

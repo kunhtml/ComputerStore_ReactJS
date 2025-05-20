@@ -133,29 +133,7 @@ app.post("/api/products", (req, res) => {
   }
 });
 
-// API endpoint để lưu users
-app.post("/api/users", (req, res) => {
-  const { users } = req.body;
-
-  if (!users || !Array.isArray(users)) {
-    return res.status(400).json({ error: "Invalid users data" });
-  }
-
-  const data = readDatabase();
-  if (!data) {
-    return res.status(500).json({ error: "Failed to read database" });
-  }
-
-  // Cập nhật users
-  data.users = users;
-
-  // Ghi dữ liệu vào file
-  if (writeDatabase(data)) {
-    res.json({ success: true, users });
-  } else {
-    res.status(500).json({ error: "Failed to write database" });
-  }
-});
+// Moved to users routes
 
 // API endpoint để lấy và lưu orders
 app.get("/api/orders", (req, res) => {
