@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Form, Button, Row, Col, Container, Card } from 'react-bootstrap';
-
+import { Form, Button, Row, Col, Container, Card, Alert, Spinner } from 'react-bootstrap';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -11,6 +10,7 @@ const Register = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,6 +27,7 @@ const Register = () => {
     e.preventDefault();
     setMessage('');
     setError('');
+    setSuccess('');
     
     if (password !== confirmPassword) {
       setMessage('Mật khẩu xác nhận không khớp');
@@ -36,39 +37,43 @@ const Register = () => {
     try {
       setLoading(true);
       
-      // Lấy danh sách người dùng từ database.json
-      const response = await fetch('/database.json');
+      // Gửi dữ liệu đăng ký đến API
+      const response = await fetch('http://localhost:5678/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          isAdmin: false
+        }),
+      });
+      
       const data = await response.json();
-      const users = data.users || [];
       
-      // Kiểm tra xem email đã tồn tại chưa
-      const userExists = users.some(user => user.email === email);
-      if (userExists) {
-        setError('Email đã được đăng ký');
-        return;
+      if (!response.ok) {
+        throw new Error(data.error || 'Đăng ký thất bại');
       }
-      
-      // Tạo người dùng mới
-      const newUser = {
-        id: Date.now().toString(),
-        name,
-        email,
-        password, // Trong thực tế, mật khẩu cần được mã hóa trước khi lưu
-        isAdmin: false
-      };
       
       // Lưu thông tin người dùng vào localStorage
       localStorage.setItem('userInfo', JSON.stringify({
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        isAdmin: newUser.isAdmin
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        isAdmin: data.isAdmin
       }));
       
-      // Chuyển hướng về trang chủ hoặc trang được chỉ định
-      navigate(redirect || '/');
+      setSuccess('Đăng ký thành công! Đang chuyển hướng...');
+      
+      // Chuyển hướng sau 1.5 giây
+      setTimeout(() => {
+        navigate(redirect || '/');
+      }, 1500);
+      
     } catch (err) {
-      setError('Có lỗi xảy ra khi đăng ký tài khoản');
+      setError(err.message || 'Có lỗi xảy ra khi đăng ký tài khoản');
       console.error('Lỗi khi đăng ký:', err);
     } finally {
       setLoading(false);
@@ -82,7 +87,10 @@ const Register = () => {
           <Card className="mt-5">
             <Card.Body>
               <h2 className="text-center mb-4">Create Account</h2>
-              {message && <div className="alert alert-danger">{message}</div>}
+              {message && <Alert variant="danger">{message}</Alert>}
+              {error && <Alert variant="danger">{error}</Alert>}
+              {success && <Alert variant="success">{success}</Alert>}
+              
               <Form onSubmit={submitHandler}>
                 <Form.Group controlId="name" className="mb-3">
                   <Form.Label>Full Name</Form.Label>
@@ -131,8 +139,25 @@ const Register = () => {
                 </Form.Group>
 
                 <div className="d-grid gap-2">
-                  <Button type="submit" variant="primary" size="lg">
-                    Register
+                  <Button 
+                    type="submit" 
+                    variant="primary" 
+                    size="lg"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Spinner
+                          as="span"
+                          animation="border"
+                          size="sm"
+                          role="status"
+                          aria-hidden="true"
+                        />
+                        {' '}
+                        Loading...
+                      </>
+                    ) : 'Register'}
                   </Button>
                 </div>
               </Form>

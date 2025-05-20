@@ -15,31 +15,21 @@ const OrderList = () => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        // Get user info from localStorage
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null');
-        
         if (!userInfo) {
           navigate('/login');
           return;
         }
-        
-        // In a real app, you would fetch orders from an API
-        // For demo purposes, we'll use localStorage
-        const allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-        
-        // Filter orders for the current user
-        const userOrders = allOrders.filter(order => order.user === userInfo._id);
-        
-        setOrders(userOrders);
+        const response = await fetch('http://localhost:5678/api/orders?userId=' + userInfo.id);
+        const data = await response.json();
+        setOrders(data.orders || []);
       } catch (err) {
-        console.error('Error fetching orders:', err);
         setError('Error loading orders');
         toast.error('Error loading orders');
       } finally {
         setLoading(false);
       }
     };
-    
     fetchOrders();
   }, [navigate]);
 

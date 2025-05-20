@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import { Row, Col, Card, Button, Carousel, ListGroup } from "react-bootstrap";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
-import axios from "../services/axiosConfig";
-import "../components/owl-carousel.css";
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -12,43 +10,35 @@ const Home = () => {
   const [error, setError] = useState("");
   const [dbCategories, setDbCategories] = useState([]);
 
-  // Lấy danh mục từ database
+  // Lấy danh mục từ API
   useEffect(() => {
-    const fetchCategories = () => {
+    const fetchCategories = async () => {
       try {
-        // Lấy danh mục từ database
-        const categories = axios.database.categories || [];
-        setDbCategories(categories);
+        const response = await fetch('http://localhost:5678/api/categories');
+        const data = await response.json();
+        setDbCategories(data.categories || []);
       } catch (err) {
-        console.error("Error loading categories:", err);
+        console.error('Error fetching categories:', err);
+        setDbCategories([]);
       }
     };
-
     fetchCategories();
   }, []);
 
+  // Lấy sản phẩm nổi bật từ API
   useEffect(() => {
-    const fetchProducts = () => {
+    const fetchProducts = async () => {
       try {
         setLoading(true);
-
-        // Lấy dữ liệu từ database.json thông qua axios
-        const allProducts = axios.database.products || [];
-
-        // Lọc sản phẩm nổi bật
-        const featuredProducts = allProducts.filter(
-          (product) => product.featured
-        );
-
-        setProducts(featuredProducts);
+        const response = await fetch('http://localhost:5678/api/products?featured=true');
+        const data = await response.json();
+        setProducts(data.products || []);
         setLoading(false);
       } catch (err) {
-        console.error("Error loading products:", err);
         setError("Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
         setLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
 
@@ -147,28 +137,31 @@ const Home = () => {
                   {dbCategories.map((category, index) => {
                     // Xác định icon dựa trên tên danh mục
                     let icon = "fas fa-folder me-2";
-
-                    if (category.includes("Laptop"))
-                      icon = "fas fa-laptop me-2";
-                    else if (
-                      category.includes("Desktop") ||
-                      category.includes("PC")
-                    )
-                      icon = "fas fa-desktop me-2";
-                    else if (category.includes("Components"))
-                      icon = "fas fa-microchip me-2";
-                    else if (category.includes("Accessories"))
-                      icon = "fas fa-headphones me-2";
-                    else if (category.includes("Monitor"))
-                      icon = "fas fa-tv me-2";
-                    else if (category.includes("Gaming"))
-                      icon = "fas fa-gamepad me-2";
-                    else if (category.includes("Networking"))
-                      icon = "fas fa-network-wired me-2";
-                    else if (category.includes("Software"))
-                      icon = "fas fa-compact-disc me-2";
-                    else if (category.includes("Workstation"))
-                      icon = "fas fa-server me-2";
+                    
+                    // Check if category is defined before using includes
+                    if (typeof category === 'string') {
+                      if (category.includes("Laptop"))
+                        icon = "fas fa-laptop me-2";
+                      else if (
+                        category.includes("Desktop") ||
+                        category.includes("PC")
+                      )
+                        icon = "fas fa-desktop me-2";
+                      else if (category.includes("Components"))
+                        icon = "fas fa-microchip me-2";
+                      else if (category.includes("Accessories"))
+                        icon = "fas fa-headphones me-2";
+                      else if (category.includes("Monitor"))
+                        icon = "fas fa-tv me-2";
+                      else if (category.includes("Gaming"))
+                        icon = "fas fa-gamepad me-2";
+                      else if (category.includes("Networking"))
+                        icon = "fas fa-network-wired me-2";
+                      else if (category.includes("Software"))
+                        icon = "fas fa-compact-disc me-2";
+                      else if (category.includes("Workstation"))
+                        icon = "fas fa-server me-2";
+                    }
 
                     return (
                       <ListGroup.Item

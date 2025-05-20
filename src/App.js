@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Container } from "react-bootstrap";
 import { ToastContainer } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -25,14 +25,11 @@ import PlaceOrder from "./pages/PlaceOrder";
 import Order from "./pages/Order";
 import OrderList from "./pages/OrderList";
 import MyReviews from "./pages/MyReviews";
-
-// Admin Pages
-import UserList from "./pages/admin/UserList";
-import UserEdit from "./pages/admin/UserEdit";
-import ProductList from "./pages/admin/ProductList";
-import ProductEdit from "./pages/admin/ProductEdit";
-import OrderListAdmin from "./pages/admin/OrderList";
-import ReviewList from "./pages/admin/ReviewList";
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import ProductManagement from './pages/admin/ProductManagement';
+import UserManagement from './pages/admin/UserManagement';
+import OrderManagement from './pages/admin/OrderManagement';
 
 // Private Route Components
 import PrivateRoute from "./components/PrivateRoute";
@@ -40,10 +37,15 @@ import AdminRoute from "./components/AdminRoute";
 
 function App() {
   const { userInfo } = useAppContext();
+  const location = useLocation();
+  
+  // Check if the current route is an admin route
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   return (
     <div className="app d-flex flex-column min-vh-100">
-      <Header />
+      {/* Only show Header on non-admin routes */}
+      {!isAdminRoute && <Header />}
       <main className="flex-grow-1 py-4">
         <Container>
           <Routes>
@@ -126,54 +128,12 @@ function App() {
             />
 
             {/* Admin Routes */}
-            <Route
-              path="/admin/orderlist"
-              element={
-                <AdminRoute>
-                  <OrderListAdmin />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/userlist"
-              element={
-                <AdminRoute>
-                  <UserList />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/user/:id/edit"
-              element={
-                <AdminRoute>
-                  <UserEdit />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/productlist"
-              element={
-                <AdminRoute>
-                  <ProductList />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/product/:id/edit"
-              element={
-                <AdminRoute>
-                  <ProductEdit />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/reviewlist"
-              element={
-                <AdminRoute>
-                  <ReviewList />
-                </AdminRoute>
-              }
-            />
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="products" element={<ProductManagement />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="orders" element={<OrderManagement />} />
+            </Route>
 
             {/* 404 Page */}
             <Route path="*" element={<Navigate to="/" replace />} />

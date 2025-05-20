@@ -200,6 +200,190 @@ app.post("/api/orders", (req, res) => {
   }
 });
 
+// API endpoint for dashboard statistics
+app.get("/api/dashboard/stats", (req, res) => {
+  try {
+    const data = readDatabase();
+    if (!data) {
+      return res.status(500).json({ error: "Failed to read database" });
+    }
+
+    // Calculate dashboard stats
+    const totalOrders = data.orders ? data.orders.length : 0;
+    const totalProducts = data.products ? data.products.length : 0;
+    const totalUsers = data.users ? data.users.length : 0;
+
+    // Calculate total revenue from all completed orders
+    const totalRevenue = data.orders
+      ? data.orders
+        .filter(order => order && order.status === 'delivered')
+        .reduce((sum, order) => sum + (order.total || 0), 0)
+      : 0;
+
+    // Get recent orders (last 5)
+    const recentOrders = data.orders
+      ? data.orders
+        .filter(order => order !== null && order !== undefined)
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        .slice(0, 5)
+        .map(order => ({
+          ...order,
+          total: order.total || 0,
+          status: order.status || 'pending',
+          createdAt: order.createdAt || new Date().toISOString()
+        }))
+      : [];
+
+    // Get low stock products (less than 10 items)
+    const lowStockProducts = data.products
+      ? data.products
+        .filter(product => product !== null && product !== undefined && (product.countInStock || 0) < 10)
+        .sort((a, b) => (a.countInStock || 0) - (b.countInStock || 0))
+        .slice(0, 5)
+        .map(product => ({
+          ...product,
+          countInStock: product.countInStock || 0,
+          price: product.price || 0
+        }))
+      : [];
+
+    res.json({
+      totalOrders,
+      totalProducts,
+      totalUsers,
+      totalRevenue,
+      recentOrders,
+      lowStockProducts
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Health check
+const healthRoute = require('./routes/health');
+app.use('/api/health', healthRoute);
+
+// Register all API routes
+const usersRoute = require('./routes/users');
+app.use('/api/users', usersRoute);
+
+const productsRoute = require('./routes/products');
+app.use('/api/products', productsRoute);
+
+const ordersRoute = require('./routes/orders');
+app.use('/api/orders', ordersRoute);
+
+const categoriesRoute = require('./routes/categories');
+app.use('/api/categories', categoriesRoute);
+
+const brandsRoute = require('./routes/brands');
+app.use('/api/brands', brandsRoute);
+
+// API endpoint để lấy products
+app.get("/api/products", (req, res) => {
+  try {
+    const data = readDatabase();
+    if (!data) {
+      return res.status(500).json({ error: "Failed to read database" });
+    }
+
+    // Extract query parameters
+    const { q, category, brand, page = 1, limit = 10, sort } = req.query;
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+
+    // Get all products or empty array if none exist
+    let products = data.products || [];
+
+    // Apply search filter if 'q' parameter is provided
+    if (q) {
+      const searchTerm = q.toLowerCase();
+      products = products.filter(product => 
+        product.name?.toLowerCase().includes(searchTerm) || 
+        product.description?.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Filter by category if provided
+    if (category) {
+      products = products.filter(product => product.category === category);
+    }
+
+    // Filter by brand if provided
+    if (brand) {
+      products = products.filter(product => product.brand === brand);
+    }
+
+    // Sort products if sort parameter is provided
+    if (sort) {
+      if (sort === 'name_asc') {
+        products.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (sort === 'name_desc') {
+        products.sort((a, b) => b.name.localeCompare(a.name));
+      } else if (sort === 'price_asc') {
+        products.sort((a, b) => a.price - b.price);
+      } else if (sort === 'price_desc') {
+        products.sort((a, b) => b.price - a.price);
+      } else if (sort === 'createdAt_asc') {
+        products.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      } else if (sort === 'createdAt_desc') {
+        products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      }
+    }
+
+    // Get total count before pagination
+    const total = products.length;
+
+    // Apply pagination
+    if (pageNum && limitNum) {
+      const startIndex = (pageNum - 1) * limitNum;
+      const endIndex = startIndex + limitNum;
+      products = products.slice(startIndex, endIndex);
+    }
+
+    // Return products with total count
+    res.json({
+      products,
+      total
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API endpoint để lấy brands
+app.get("/api/brands", (req, res) => {
+  try {
+    const data = readDatabase();
+    if (!data) {
+      return res.status(500).json({ error: "Failed to read database" });
+    }
+    
+    res.json({
+      brands: data.brands || []
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API endpoint để lấy categories
+app.get("/api/categories", (req, res) => {
+  try {
+    const data = readDatabase();
+    if (!data) {
+      return res.status(500).json({ error: "Failed to read database" });
+    }
+    
+    res.json({
+      categories: data.categories || []
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, "build")));
 
@@ -210,5 +394,5 @@ app.get("*", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

@@ -37,25 +37,7 @@ const Profile = ({ history }) => {
     
     try {
       setLoading(true);
-      // Lấy danh sách người dùng từ database.json
-      const response = await fetch('/database.json');
-      const data = await response.json();
-      const users = data.users || [];
-      
-      // Tìm và cập nhật thông tin người dùng
-      const updatedUsers = users.map(u => {
-        if (u.email === email) {
-          return {
-            ...u,
-            name,
-            ...(password && { password }) // Chỉ cập nhật mật khẩu nếu được cung cấp
-          };
-        }
-        return u;
-      });
-      
-      // Lưu lại danh sách người dùng đã cập nhật
-      // Lưu ý: Trong ứng dụng thực tế, bạn cần gọi API để cập nhật dữ liệu trên server
+      // Xóa mọi fetch hoặc import database.json và logic liên quan database cũ
       
       // Cập nhật thông tin người dùng trong localStorage
       const updatedUser = {

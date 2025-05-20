@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
-import axios from "../services/axiosConfig";
 
 // Tạo context
 const AppContext = createContext();
@@ -18,37 +17,30 @@ export const AppProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState(null);
-  const [productUpdated, setProductUpdated] = useState(false);
 
   // Cart state
   const [cartItems, setCartItems] = useState([]);
   const [shippingAddress, setShippingAddress] = useState({});
   const [paymentMethod, setPaymentMethod] = useState("");
 
-  // Load user info from localStorage and products from database.json on mount
+  // Load user info from localStorage and cart on mount
   useEffect(() => {
     const storedUserInfo = localStorage.getItem("userInfo");
     if (storedUserInfo) {
       setUserInfo(JSON.parse(storedUserInfo));
     }
-
     const storedCartItems = localStorage.getItem("cartItems");
     if (storedCartItems) {
       setCartItems(JSON.parse(storedCartItems));
     }
-
     const storedShippingAddress = localStorage.getItem("shippingAddress");
     if (storedShippingAddress) {
       setShippingAddress(JSON.parse(storedShippingAddress));
     }
-
     const storedPaymentMethod = localStorage.getItem("paymentMethod");
     if (storedPaymentMethod) {
       setPaymentMethod(JSON.parse(storedPaymentMethod));
     }
-
-    // Luôn lấy dữ liệu sản phẩm từ database.json
-    setProducts(axios.database.products || []);
   }, []);
 
   // Save cart items to localStorage whenever they change
@@ -71,14 +63,27 @@ export const AppProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const { data } = await axios.post("users/login", { email, password });
+      const response = await fetch('http://localhost:5678/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+      
       setUserInfo(data);
       localStorage.setItem("userInfo", JSON.stringify(data));
       setLoading(false);
       return data;
     } catch (err) {
       setLoading(false);
-      setError(err.response?.data?.message || "An error occurred");
+      setError(err.message || "An error occurred");
       throw err;
     }
   };
@@ -92,14 +97,21 @@ export const AppProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const { data } = await axios.post("users", { name, email, password });
+      const response = await fetch('http://localhost:5678/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await response.json();
       setUserInfo(data);
       localStorage.setItem("userInfo", JSON.stringify(data));
       setLoading(false);
       return data;
     } catch (err) {
       setLoading(false);
-      setError(err.response?.data?.message || "An error occurred");
+      setError(err.message || "An error occurred");
       throw err;
     }
   };
@@ -109,162 +121,14 @@ export const AppProvider = ({ children }) => {
     try {
       setProductsLoading(true);
       setProductsError(null);
-
-      // Luôn lấy dữ liệu từ database.json
-      setProducts(axios.database.products || []);
-
+      const response = await fetch('http://localhost:5678/api/products');
+      const data = await response.json();
+      setProducts(data.products || []);
       setProductsLoading(false);
-      return axios.database.products || [];
+      return data.products || [];
     } catch (err) {
       setProductsLoading(false);
-      setProductsError(err.message || "An error occurred");
-      throw err;
-    }
-  };
-
-  const fetchProductById = async (id) => {
-    try {
-      setProductsLoading(true);
-      setProductsError(null);
-
-      // Luôn lấy dữ liệu từ database.json
-      const allProducts = axios.database.products || [];
-
-      // Tìm sản phẩm theo id
-      const product = allProducts.find((p) => p.id === parseInt(id));
-
-      setProductsLoading(false);
-
-      if (product) {
-        return product;
-      } else {
-        throw new Error("Product not found");
-      }
-    } catch (err) {
-      setProductsLoading(false);
-      setProductsError(err.message || "An error occurred");
-      throw err;
-    }
-  };
-
-  // Thêm sản phẩm mới
-  const createProduct = async (productData) => {
-    try {
-      setProductsLoading(true);
-      setProductsError(null);
-
-      // Luôn lấy dữ liệu từ database.json
-      const allProducts = axios.database.products || [];
-
-      // Tạo sản phẩm mới
-      const newProduct = {
-        id:
-          allProducts.length > 0
-            ? Math.max(...allProducts.map((p) => p.id)) + 1
-            : 1,
-        ...productData,
-        rating: 0,
-        numReviews: 0,
-        createdAt: new Date().toISOString(),
-      };
-
-      // Thêm sản phẩm mới vào danh sách
-      const updatedProducts = [...allProducts, newProduct];
-
-      // Cập nhật database trong axios
-      axios.database.products = updatedProducts;
-
-      // Lưu dữ liệu vào localStorage
-      localStorage.setItem("databaseData", JSON.stringify(axios.database));
-
-      // Cập nhật state
-      setProducts(updatedProducts);
-
-      setProductsLoading(false);
-      setProductUpdated(true);
-
-      return newProduct;
-    } catch (err) {
-      setProductsLoading(false);
-      setProductsError(err.message || "An error occurred");
-      throw err;
-    }
-  };
-
-  // Cập nhật sản phẩm
-  const updateProduct = async (id, productData) => {
-    try {
-      setProductsLoading(true);
-      setProductsError(null);
-
-      // Luôn lấy dữ liệu từ database.json
-      const allProducts = axios.database.products || [];
-
-      // Tìm sản phẩm theo id
-      const productIndex = allProducts.findIndex((p) => p.id === parseInt(id));
-
-      if (productIndex === -1) {
-        throw new Error("Product not found");
-      }
-
-      // Cập nhật sản phẩm
-      const updatedProduct = {
-        ...allProducts[productIndex],
-        ...productData,
-      };
-
-      // Cập nhật danh sách sản phẩm
-      const updatedProducts = [...allProducts];
-      updatedProducts[productIndex] = updatedProduct;
-
-      // Cập nhật database trong axios
-      axios.database.products = updatedProducts;
-
-      // Lưu dữ liệu vào localStorage
-      localStorage.setItem("databaseData", JSON.stringify(axios.database));
-
-      // Cập nhật state
-      setProducts(updatedProducts);
-
-      setProductsLoading(false);
-      setProductUpdated(true);
-
-      return updatedProduct;
-    } catch (err) {
-      setProductsLoading(false);
-      setProductsError(err.message || "An error occurred");
-      throw err;
-    }
-  };
-
-  // Xóa sản phẩm
-  const deleteProduct = async (id) => {
-    try {
-      setProductsLoading(true);
-      setProductsError(null);
-
-      // Luôn lấy dữ liệu từ database.json
-      const allProducts = axios.database.products || [];
-
-      // Lọc ra sản phẩm cần xóa
-      const updatedProducts = allProducts.filter((p) => p.id !== parseInt(id));
-
-      // Cập nhật database trong axios
-      axios.database.products = updatedProducts;
-
-      // Lưu dữ liệu vào localStorage
-      localStorage.setItem("databaseData", JSON.stringify(axios.database));
-
-      // Cập nhật state
-      setProducts(updatedProducts);
-
-      setProductsLoading(false);
-      setProductUpdated(true);
-
-      return { success: true };
-    } catch (err) {
-      setProductsLoading(false);
-      setProductsError(err.message || "An error occurred");
+      setProductsError('Failed to load products');
       throw err;
     }
   };
@@ -326,21 +190,15 @@ export const AppProvider = ({ children }) => {
     products,
     productsLoading,
     productsError,
-    productUpdated,
     fetchProducts,
-    fetchProductById,
-    createProduct,
-    updateProduct,
-    deleteProduct,
 
     // Cart state and actions
     cartItems,
-    addToCart,
-    removeFromCart,
+    setCartItems,
     shippingAddress,
-    saveShippingAddress,
+    setShippingAddress,
     paymentMethod,
-    savePaymentMethod,
+    setPaymentMethod,
   };
 
   return (

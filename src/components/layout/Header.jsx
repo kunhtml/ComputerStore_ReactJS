@@ -50,17 +50,8 @@ const Header = () => {
                 <NavDropdown title={userInfo.name || "User"} id="username">
                   {userInfo.isAdmin ? (
                     <>
-                      <LinkContainer to="/admin/reviewlist">
-                        <NavDropdown.Item>Manager Review</NavDropdown.Item>
-                      </LinkContainer>
-                      <LinkContainer to="/admin/userlist">
-                        <NavDropdown.Item>Manager Users</NavDropdown.Item>
-                      </LinkContainer>
-                      <LinkContainer to="/admin/productlist">
-                        <NavDropdown.Item>Manager Products</NavDropdown.Item>
-                      </LinkContainer>
-                      <LinkContainer to="/admin/orderlist">
-                        <NavDropdown.Item>Manager Orders</NavDropdown.Item>
+                      <LinkContainer to="/admin">
+                        <NavDropdown.Item>Admin Panel</NavDropdown.Item>
                       </LinkContainer>
                       <NavDropdown.Divider />
                       <NavDropdown.Item onClick={logoutHandler}>

@@ -6,6 +6,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './App.css';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import OrderManagement from './pages/admin/OrderManagement';
+import ProductManagement from './pages/admin/ProductManagement';
+import CategoryManagement from './pages/admin/CategoryManagement';
+import BrandManagement from './pages/admin/BrandManagement';
+import ReviewManagement from './pages/admin/ReviewManagement';
 
 // Lazy load components
 const Header = React.lazy(() => import('./components/layout/Header'));
@@ -25,13 +32,6 @@ const PlaceOrder = React.lazy(() => import('./pages/PlaceOrder'));
 const Order = React.lazy(() => import('./pages/Order'));
 const OrderList = React.lazy(() => import('./pages/OrderList'));
 const UserDashboard = React.lazy(() => import('./pages/UserDashboard'));
-
-// Lazy load pages - Admin
-const UserList = React.lazy(() => import('./pages/admin/UserList'));
-const UserEdit = React.lazy(() => import('./pages/admin/UserEdit'));
-const ProductList = React.lazy(() => import('./pages/admin/ProductList'));
-const ProductEdit = React.lazy(() => import('./pages/admin/ProductEdit'));
-const OrderListAdmin = React.lazy(() => import('./pages/admin/OrderList'));
 
 // Loading component
 const Loading = () => (
@@ -190,54 +190,14 @@ function App() {
                 />
 
                 {/* Admin Routes */}
-                <Route
-                  path="/admin/orderlist"
-                  element={
-                    <AdminRoute>
-                      <OrderListAdmin />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/userlist"
-                  element={
-                    <AdminRoute>
-                      <UserList />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/user/:id/edit"
-                  element={
-                    <AdminRoute>
-                      <UserEdit />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/productlist"
-                  element={
-                    <AdminRoute>
-                      <ProductList />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/product/:id/edit"
-                  element={
-                    <AdminRoute>
-                      <ProductEdit />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/orderlist"
-                  element={
-                    <AdminRoute>
-                      <OrderListAdmin />
-                    </AdminRoute>
-                  }
-                />
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="orders" element={<OrderManagement />} />
+                  <Route path="products" element={<ProductManagement />} />
+                  <Route path="categories" element={<CategoryManagement />} />
+                  <Route path="brands" element={<BrandManagement />} />
+                  <Route path="reviews" element={<ReviewManagement />} />
+                </Route>
 
                 {/* 404 Page */}
                 <Route path="*" element={<Navigate to="/" replace />} />
