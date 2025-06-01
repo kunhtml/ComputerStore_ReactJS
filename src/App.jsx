@@ -122,7 +122,6 @@ function App() {
                 <Route path="/search/:keyword/page/:pageNumber" element={<Products />} />
                 <Route path="/products" element={<Products />} />
                 <Route path="/products/:id" element={<ProductDetail />} />
-                <Route path="/cart/:id?" element={<Cart />} />
                 <Route 
                   path="/login" 
                   element={userInfo ? <Navigate to="/" replace /> : <Login />} 
@@ -138,6 +137,14 @@ function App() {
                   element={
                     <PrivateRoute>
                       <UserDashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/cart/:id?"
+                  element={
+                    <PrivateRoute>
+                      <Cart />
                     </PrivateRoute>
                   }
                 />
