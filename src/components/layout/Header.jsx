@@ -32,18 +32,18 @@ const Header = () => {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto">
-              {/* Only show Products and Cart links for non-admin users */}
-              {!userInfo?.isAdmin && (
-                <>
-                  <LinkContainer to="/products">
-                    <Nav.Link>Products</Nav.Link>
-                  </LinkContainer>
-                  <LinkContainer to="/cart">
-                    <Nav.Link>
-                      <i className="fas fa-shopping-cart"></i> Cart
-                    </Nav.Link>
-                  </LinkContainer>
-                </>
+              {/* Always show Products link */}
+              <LinkContainer to="/products">
+                <Nav.Link>Products</Nav.Link>
+              </LinkContainer>
+              
+              {/* Only show Cart link for logged-in non-admin users */}
+              {userInfo && !userInfo.isAdmin && (
+                <LinkContainer to="/cart">
+                  <Nav.Link>
+                    <i className="fas fa-shopping-cart"></i> Cart
+                  </Nav.Link>
+                </LinkContainer>
               )}
               {/* Hiển thị dropdown menu nếu đã đăng nhập */}
               {isLoggedIn && userInfo ? (
