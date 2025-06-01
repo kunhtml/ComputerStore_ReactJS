@@ -58,8 +58,19 @@ const UserManagement = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Get current logged-in user
+      const currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}');
+
+      // Prevent admin from changing their own role
+      if (modalType === 'edit' && currentUser.id === currentUser.id && 
+          currentUser.isAdmin && !currentUser.isAdmin) {
+        alert('Admin không thể tự thay đổi vai trò của mình!');
+        setSaving(false);
+        return;
+      }
+
       if (modalType === 'add') {
-        await axios.post(`${API_BASE}/users`, currentUser);
+        await axios.post(`${API_BASE}/users`, { ...currentUser, role: 'employee' });
       } else {
         await axios.put(`${API_BASE}/users/${currentUser.id}`, currentUser);
       }
@@ -78,10 +89,16 @@ const UserManagement = () => {
   };
 
   // Delete user
-  const handleDelete = async (id) => {
+  const handleDelete = async (user) => {
+    // Prevent deleting admin users
+    if (user.isAdmin) {
+      alert('Không thể xóa tài khoản admin!');
+      return;
+    }
+
     if (!window.confirm('Bạn có chắc chắn muốn xóa user này?')) return;
     try {
-      await axios.delete(`${API_BASE}/users/${id}`);
+      await axios.delete(`${API_BASE}/users/${user.id}`);
       // Refetch
       const res = await axios.get(`${API_BASE}/users`, { params: { page, limit: PAGE_SIZE } });
       setUsers(res.data.users || []);
@@ -151,7 +168,7 @@ const UserManagement = () => {
                   <td>{user.createdAt ? new Date(user.createdAt).toLocaleString() : ''}</td>
                   <td>
                     <Button size="sm" variant="warning" className="me-2" onClick={() => openEditModal(user)}>Sửa</Button>
-                    <Button size="sm" variant="danger" onClick={() => handleDelete(user.id)}>Xóa</Button>
+                    <Button size="sm" variant="danger" onClick={() => handleDelete(user)}>Xóa</Button>
                   </td>
                 </tr>
               ))}
@@ -192,12 +209,26 @@ const UserManagement = () => {
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Check
-                type="checkbox"
-                label="Admin"
-                checked={!!currentUser.isAdmin}
-                onChange={e => setCurrentUser({ ...currentUser, isAdmin: e.target.checked })}
-              />
+              <Form.Label>Vai trò</Form.Label>
+              <Form.Select
+                value={currentUser.role || 'employee'}
+                onChange={e => {
+                  const loggedInUser = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                  
+                  // Prevent admin from changing their own role
+                  if (loggedInUser.isAdmin && loggedInUser.id === currentUser.id && e.target.value !== 'admin') {
+                    alert('Admin không thể tự thay đổi vai trò của mình!');
+                    return;
+                  }
+                  
+                  setCurrentUser({ ...currentUser, role: e.target.value })
+                }}
+                disabled={modalType === 'add'} // Disable role selection when adding new user
+              >
+                <option value="customer">Khách hàng</option>
+                <option value="employee">Nhân viên</option>
+                <option value="admin">Quản trị viên</option>
+              </Form.Select>
             </Form.Group>
           </Form>
         </Modal.Body>

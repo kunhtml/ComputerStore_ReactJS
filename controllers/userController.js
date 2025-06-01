@@ -73,15 +73,31 @@ exports.createUser = (req, res) => {
 
 exports.updateUser = (req, res) => {
   try {
-    // Nếu có cập nhật password, hash nó
-    if (req.body.password) {
-      req.body.password = hashPassword(req.body.password);
+    const userId = req.params.id;
+    const { name, email, password, role } = req.body;
+    const currentUser = req.user; // Assuming you have middleware to attach current user
+
+    // Prevent admin from changing their own role
+    if (currentUser.id === userId && currentUser.isAdmin && role !== 'admin') {
+      return res.status(403).json({ error: 'Admin không thể tự thay đổi vai trò của mình!' });
     }
-    
-    const user = userModel.updateUser(req.params.id, req.body);
-    
-    // Không trả về password
-    const { password, ...userWithoutPassword } = user;
+
+    // Validate role
+    const validRoles = ['customer', 'employee', 'admin'];
+    if (role && !validRoles.includes(role)) {
+      return res.status(400).json({ error: 'Vai trò không hợp lệ' });
+    }
+
+    // Update user
+    const updatedUser = userModel.updateUser(userId, { 
+      name, 
+      email, 
+      password, 
+      role 
+    });
+
+    // Remove sensitive information
+    const { password: pwd, ...userWithoutPassword } = updatedUser;
     
     res.json(userWithoutPassword);
   } catch (error) {
@@ -91,14 +107,24 @@ exports.updateUser = (req, res) => {
 
 exports.deleteUser = (req, res) => {
   try {
-    const user = userModel.deleteUser(req.params.id);
-    
-    // Không trả về password
-    const { password, ...userWithoutPassword } = user;
-    
-    res.json(userWithoutPassword);
+    const userId = req.params.id;
+    const currentUser = req.user; // Assuming you have middleware to attach current user
+
+    // Prevent deleting admin users
+    const userToDelete = userModel.getUserById(userId);
+    if (!userToDelete) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (userToDelete.isAdmin) {
+      return res.status(403).json({ error: 'Không thể xóa tài khoản admin!' });
+    }
+
+    // Proceed with deletion
+    userModel.deleteUser(userId);
+    res.json({ message: 'User deleted successfully' });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 

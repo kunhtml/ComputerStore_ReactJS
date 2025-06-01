@@ -51,17 +51,45 @@ function updateUser(id, update) {
   const db = readDatabase();
   const idx = db.users.findIndex(u => u.id === id);
   if (idx === -1) throw new Error('Không tìm thấy user');
-  db.users[idx] = { ...db.users[idx], ...update };
+
+  // Merge existing user data with new data
+  const updatedUser = {
+    ...db.users[idx],
+    ...update
+  };
+
+  // Validate role if provided
+  const validRoles = ['customer', 'employee', 'admin'];
+  if (update.role && !validRoles.includes(update.role)) {
+    throw new Error('Invalid role');
+  }
+
+  // Prevent changing admin role
+  if (db.users[idx].isAdmin && update.role !== 'admin') {
+    throw new Error('Cannot change admin role');
+  }
+
+  // Update users array
+  db.users[idx] = updatedUser;
   writeDatabase(db);
-  return db.users[idx];
+
+  return updatedUser;
 }
 
 function deleteUser(id) {
   const db = readDatabase();
   const idx = db.users.findIndex(u => u.id === id);
   if (idx === -1) throw new Error('Không tìm thấy user');
+
+  // Prevent deleting admin users
+  if (db.users[idx].isAdmin) {
+    throw new Error('Cannot delete admin user');
+  }
+
+  // Remove user
   const deleted = db.users.splice(idx, 1)[0];
   writeDatabase(db);
+
   return deleted;
 }
 

@@ -17,8 +17,8 @@
     {
       "name": "Test User",
       "email": "test@example.com",
-      "password": "hashed_password123",
-      "isAdmin": false,
+      "password": "",
+      "isAdmin": true,
       "id": "1747751566132",
       "createdAt": "2025-05-20T14:32:46.132Z"
     },
