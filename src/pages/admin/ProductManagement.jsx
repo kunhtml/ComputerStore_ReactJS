@@ -109,6 +109,7 @@ const ProductManagement = () => {
 
   // Handle image upload
   const handleImageUpload = async (e) => {
+    e.preventDefault();
     const file = e.target.files[0];
     if (!file) return;
 
@@ -484,7 +485,7 @@ const ProductManagement = () => {
           <Modal.Title>{modalType === 'add' ? 'Thêm sản phẩm mới' : 'Chỉnh sửa sản phẩm'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
+          <Form onSubmit={(e) => e.preventDefault()}>
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
@@ -646,7 +647,7 @@ const ProductManagement = () => {
           <Modal.Title>Thêm danh mục mới</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
+          <Form onSubmit={(e) => e.preventDefault()}>
             <Form.Group className="mb-3">
               <Form.Label>Tên danh mục</Form.Label>
               <Form.Control
@@ -672,7 +673,7 @@ const ProductManagement = () => {
           <Modal.Title>Thêm thương hiệu mới</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
+          <Form onSubmit={(e) => e.preventDefault()}>
             <Form.Group className="mb-3">
               <Form.Label>Tên thương hiệu</Form.Label>
               <Form.Control
