@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
@@ -6,6 +6,38 @@ const Footer = () => {
   const linkStyle = {
     color: 'white',
     textDecoration: 'none'
+  };
+
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('http://localhost:5678/api/categories');
+        const data = await response.json();
+        setCategories(data.categories || []);
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+        setCategories([]);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  const getIconClass = (category) => {
+    let icon = 'fas fa-folder me-2';
+    if (typeof category === 'string') {
+      if (category.includes('Laptop')) icon = 'fas fa-laptop me-2';
+      else if (category.includes('Desktop') || category.includes('PC')) icon = 'fas fa-desktop me-2';
+      else if (category.includes('Components')) icon = 'fas fa-microchip me-2';
+      else if (category.includes('Accessories')) icon = 'fas fa-headphones me-2';
+      else if (category.includes('Monitor')) icon = 'fas fa-tv me-2';
+      else if (category.includes('Gaming')) icon = 'fas fa-gamepad me-2';
+      else if (category.includes('Networking')) icon = 'fas fa-network-wired me-2';
+      else if (category.includes('Software')) icon = 'fas fa-compact-disc me-2';
+      else if (category.includes('Workstation')) icon = 'fas fa-server me-2';
+    }
+    return icon;
   };
 
   return (
@@ -38,18 +70,17 @@ const Footer = () => {
           <Col md={2} className="mb-4">
             <h5 className="text-white mb-3">Danh Mục</h5>
             <ul className="list-unstyled">
-              <li className="mb-2">
-                <Link to="/products?category=laptop" style={linkStyle}>Laptop</Link>
-              </li>
-              <li className="mb-2">
-                <Link to="/products?category=desktop" style={linkStyle}>Desktop</Link>
-              </li>
-              <li className="mb-2">
-                <Link to="/products?category=accessories" style={linkStyle}>Phụ Kiện</Link>
-              </li>
-              <li className="mb-2">
-                <Link to="/products?category=components" style={linkStyle}>Linh Kiện</Link>
-              </li>
+              {categories.map((cat, idx) => (
+                <li className="mb-2" key={idx}>
+                  <Link
+                    to={`/products?category=${encodeURIComponent(cat)}`}
+                    style={linkStyle}
+                  >
+                    <i className={getIconClass(cat)}></i>
+                    {cat}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </Col>
           
