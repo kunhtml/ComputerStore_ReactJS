@@ -5,6 +5,7 @@ import Message from '../../components/Message';
 import CheckoutSteps from '../../components/CheckoutSteps';
 import { toast } from 'react-toastify';
 import { useAppContext } from '../../context/AppContext';
+import formatPrice from '../../utils/formatPrice';
 
 const PlaceOrder = () => {
   const navigate = useNavigate();
@@ -133,7 +134,7 @@ const PlaceOrder = () => {
                           <Link to={`/products/${item.product || item.id}`}>{item.name}</Link>
                         </Col>
                         <Col md={4}>
-                          {item.qty} x ${item.price} = ${(item.qty * item.price).toFixed(2)}
+                          {item.qty} x {formatPrice(item.price)} = {formatPrice(item.qty * item.price)}
                         </Col>
                       </Row>
                     </ListGroup.Item>
@@ -152,25 +153,25 @@ const PlaceOrder = () => {
               <ListGroup.Item>
                 <Row>
                   <Col>Items</Col>
-                  <Col>${itemsPrice}</Col>
+                  <Col>{formatPrice(Number(itemsPrice))}</Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item>
                 <Row>
                   <Col>Shipping</Col>
-                  <Col>${shippingPrice}</Col>
+                  <Col>{formatPrice(Number(shippingPrice))}</Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item>
                 <Row>
                   <Col>Tax</Col>
-                  <Col>${taxPrice}</Col>
+                  <Col>{formatPrice(Number(taxPrice))}</Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item>
                 <Row>
                   <Col>Total</Col>
-                  <Col>${totalPrice}</Col>
+                  <Col>{formatPrice(Number(totalPrice))}</Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item>

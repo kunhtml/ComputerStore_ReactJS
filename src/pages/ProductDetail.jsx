@@ -15,6 +15,7 @@ import { useAppContext } from "../context/AppContext";
 import Message from "../components/Message";
 import Loader from "../components/Loader";
 import { toast } from "react-toastify";
+import formatPrice from "../utils/formatPrice";
 
 const ProductDetail = () => {
   const [qty, setQty] = useState(1);
@@ -181,7 +182,7 @@ const ProductDetail = () => {
                 text={`${product.numReviews || 0} reviews`}
               />
             </ListGroupItem>
-            <ListGroupItem>Price: ${product.price}</ListGroupItem>
+            <ListGroupItem>Price: {formatPrice(product.price)}</ListGroupItem>
             <ListGroupItem>
               Description: {product.description}
             </ListGroupItem>
@@ -194,7 +195,7 @@ const ProductDetail = () => {
                 <Row>
                   <Col>Price:</Col>
                   <Col>
-                    <strong>${product.price}</strong>
+                    <strong>{formatPrice(product.price)}</strong>
                   </Col>
                 </Row>
               </ListGroupItem>
