@@ -33,39 +33,49 @@
   ],
   "products": [
     {
-      "name": "test1",
-      "price": 11111,
-      "category": "All In One",
+      "id": "1750000000001",
+      "name": "Laptop Dell Inspiron 15 3530",
+      "price": 14990000,
+      "category": "Laptop",
       "brand": "DELL",
-      "countInStock": 1,
-      "description": "test1",
-      "id": "1747750795202",
-      "createdAt": "2025-05-20T14:19:55.202Z",
-      "reviews": [
-        {
-          "name": "max",
-          "rating": 5,
-          "comment": "",
-          "createdAt": "2025-05-20T14:49:43.088Z",
-          "id": "1747752583088"
-        }
-      ],
-      "rating": 5,
-      "numReviews": 2,
-      "image": "/uploads/1747758831918-36849797.png",
-      "updatedAt": "2025-05-20T16:33:53.328Z"
+      "countInStock": 10,
+      "description": "Dell Inspiron 15 3530, i5-1235U, 8GB, 512GB SSD, 15.6\" FHD",
+      "image": "http://localhost:5678/uploads/1749747052700-358076379.jpg",
+      "rating": 0,
+      "numReviews": 0,
+      "reviews": [],
+      "isFeatured": true,
+      "updatedAt": "2025-06-12T16:50:55.395Z"
     },
     {
-      "name": "test2",
-      "price": 1123123,
-      "category": "All In One",
-      "brand": "DELL",
-      "countInStock": 1,
-      "description": "123",
-      "image": "/uploads/1747759262015-282044730.jpg",
-      "id": "1747759264477",
-      "createdAt": "2025-05-20T16:41:04.477Z",
-      "isFeatured": true
+      "id": "1750000000002",
+      "name": "Laptop Acer Aspire 7 A715-42G",
+      "price": 17990000,
+      "category": "Laptop",
+      "brand": "ACER",
+      "countInStock": 8,
+      "description": "Acer Aspire 7 A715-42G R5-5500U, GTX 1650, 8GB, 512GB SSD, 15.6\" FHD",
+      "image": "http://localhost:5678/uploads/1749747083106-5387229.jpg",
+      "rating": 0,
+      "numReviews": 0,
+      "reviews": [],
+      "isFeatured": true,
+      "updatedAt": "2025-06-12T16:51:25.011Z"
+    },
+    {
+      "id": "1750000000003",
+      "name": "Laptop Asus TUF Gaming F15 FX506HF",
+      "price": 20990000,
+      "category": "Laptop Gaming",
+      "brand": "ASUS",
+      "countInStock": 6,
+      "description": "Asus TUF Gaming F15 FX506HF i5-11400H, RTX 2050, 8GB, 512GB SSD, 15.6\" 144Hz",
+      "image": "http://localhost:5678/uploads/1749747113667-160857612.jpg",
+      "rating": 0,
+      "numReviews": 0,
+      "reviews": [],
+      "isFeatured": true,
+      "updatedAt": "2025-06-12T16:51:54.601Z"
     }
   ],
   "orders": [
