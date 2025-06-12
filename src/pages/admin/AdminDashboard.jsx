@@ -68,7 +68,7 @@ const AdminDashboard = () => {
         <Col md={3}>
           <Card className="h-100">
             <Card.Body>
-              <Card.Title>Total Orders</Card.Title>
+              <Card.Title>Tổng Đơn Hàng</Card.Title>
               <Card.Text className="h3">{stats.totalOrders}</Card.Text>
             </Card.Body>
           </Card>
@@ -76,7 +76,7 @@ const AdminDashboard = () => {
         <Col md={3}>
           <Card className="h-100">
             <Card.Body>
-              <Card.Title>Total Products</Card.Title>
+              <Card.Title>Tổng Sản Phẩm</Card.Title>
               <Card.Text className="h3">{stats.totalProducts}</Card.Text>
             </Card.Body>
           </Card>
@@ -84,7 +84,7 @@ const AdminDashboard = () => {
         <Col md={3}>
           <Card className="h-100">
             <Card.Body>
-              <Card.Title>Total Users</Card.Title>
+              <Card.Title>Tổng Người Dùng</Card.Title>
               <Card.Text className="h3">{stats.totalUsers}</Card.Text>
             </Card.Body>
           </Card>
@@ -92,7 +92,7 @@ const AdminDashboard = () => {
         <Col md={3}>
           <Card className="h-100">
             <Card.Body>
-              <Card.Title>Total Revenue</Card.Title>
+              <Card.Title>Tổng Doanh Thu</Card.Title>
               <Card.Text className="h3">${stats.totalRevenue ? stats.totalRevenue.toLocaleString() : '0'}</Card.Text>
             </Card.Body>
           </Card>
@@ -104,24 +104,24 @@ const AdminDashboard = () => {
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Recent Orders</h5>
+              <h5 className="mb-0">Đơn Hàng Gần Đây</h5>
               <Link to="/admin/orders" className="btn btn-sm btn-primary">
-                View All
+                Xem Tất Cả
               </Link>
             </Card.Header>
             <Card.Body>
               {stats.recentOrders.length === 0 ? (
-                <p className="text-muted">No recent orders</p>
+                <p className="text-muted">Không có đơn hàng gần đây</p>
               ) : (
                 <div className="table-responsive">
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Order ID</th>
-                        <th>Customer</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                        <th>Date</th>
+                        <th>Mã Đơn</th>
+                        <th>Khách Hàng</th>
+                        <th>Tổng</th>
+                        <th>Trạng Thái</th>
+                        <th>Ngày</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -152,24 +152,24 @@ const AdminDashboard = () => {
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Low Stock Products</h5>
+              <h5 className="mb-0">Sản Phẩm Sắp Hết Hàng</h5>
               <Link to="/admin/products" className="btn btn-sm btn-primary">
-                View All
+                Xem Tất Cả
               </Link>
             </Card.Header>
             <Card.Body>
               {stats.lowStockProducts.length === 0 ? (
-                <p className="text-muted">No low stock products</p>
+                <p className="text-muted">Không có sản phẩm sắp hết hàng</p>
               ) : (
                 <div className="table-responsive">
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Product</th>
-                        <th>Category</th>
-                        <th>Brand</th>
-                        <th>Stock</th>
-                        <th>Price</th>
+                        <th>Sản Phẩm</th>
+                        <th>Danh Mục</th>
+                        <th>Thương Hiệu</th>
+                        <th>Tồn Kho</th>
+                        <th>Giá</th>
                       </tr>
                     </thead>
                     <tbody>

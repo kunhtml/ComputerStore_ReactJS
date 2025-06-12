@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
 import { Container } from "react-bootstrap";
 import { ToastContainer } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -128,16 +128,14 @@ function App() {
             />
 
             {/* Admin Routes (protected) */}
-            <Route path="/admin/*" element={
-              <AdminRoute>
-                <AdminLayout>
-                  <Route index element={<AdminDashboard />} />
-                  <Route path="products" element={<ProductManagement />} />
-                  <Route path="users" element={<UserManagement />} />
-                  <Route path="orders" element={<OrderManagement />} />
-                </AdminLayout>
-              </AdminRoute>
-            } />
+            <Route path="/admin/*" element={<AdminRoute />}> 
+              <Route element={<AdminLayout />}> 
+                <Route index element={<AdminDashboard />} />
+                <Route path="products" element={<ProductManagement />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="orders" element={<OrderManagement />} />
+              </Route>
+            </Route>
 
             {/* 404 Page */}
             <Route path="*" element={<Navigate to="/" replace />} />

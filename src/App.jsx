@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { Container, Spinner } from 'react-bootstrap';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -13,6 +13,7 @@ import ProductManagement from './pages/admin/ProductManagement';
 import CategoryManagement from './pages/admin/CategoryManagement';
 import BrandManagement from './pages/admin/BrandManagement';
 import ReviewManagement from './pages/admin/ReviewManagement';
+import AdminRoute from './components/AdminRoute';
 
 // Lazy load components
 const Header = React.lazy(() => import('./components/layout/Header'));
@@ -53,22 +54,6 @@ const PrivateRoute = ({ element: Element, ...rest }) => {
   ) : (
     <Navigate to="/login" state={{ from: location }} replace />
   );
-};
-
-// Admin route component
-const AdminRoute = ({ children, ...rest }) => {
-  const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null');
-  const location = useLocation();
-  
-  if (!userInfo) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-  
-  if (!userInfo.isAdmin) {
-    return <Navigate to="/" replace />;
-  }
-  
-  return children;
 };
 
 function App() {
@@ -204,20 +189,15 @@ function App() {
                 />
 
                 {/* Admin Routes (protected) */}
-                <Route
-                  path="/admin/*"
-                  element={
-                    <AdminRoute>
-                      <AdminLayout />
-                    </AdminRoute>
-                  }
-                >
-                  <Route index element={<AdminDashboard />} />
-                  <Route path="orders" element={<OrderManagement />} />
-                  <Route path="products" element={<ProductManagement />} />
-                  <Route path="categories" element={<CategoryManagement />} />
-                  <Route path="brands" element={<BrandManagement />} />
-                  <Route path="reviews" element={<ReviewManagement />} />
+                <Route path="/admin/*" element={<AdminRoute />}> 
+                  <Route element={<AdminLayout />}> 
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="orders" element={<OrderManagement />} />
+                    <Route path="products" element={<ProductManagement />} />
+                    <Route path="categories" element={<CategoryManagement />} />
+                    <Route path="brands" element={<BrandManagement />} />
+                    <Route path="reviews" element={<ReviewManagement />} />
+                  </Route>
                 </Route>
 
                 {/* 404 Page */}
