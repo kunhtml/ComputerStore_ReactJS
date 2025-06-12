@@ -72,7 +72,6 @@ code {
 /* Product Card */
 .card {
   transition: transform 0.2s;
-  height: 100%;
 }
 
 .card:hover {

@@ -35,48 +35,48 @@ const Shipping = () => {
       <Row className="justify-content-md-center">
         <Col xs={12} md={6}>
           <CheckoutSteps step1 step2 />
-          <h1>Shipping</h1>
-          <Card>
+          <h1>Địa Chỉ Giao Hàng</h1>
+          <Card className="shadow-sm">
             <Card.Body>
               <Form onSubmit={submitHandler}>
-                <Form.Group controlId='address' className='py-2'>
-                  <Form.Label>Address</Form.Label>
+                <Form.Group controlId='address' className='mb-3'>
+                  <Form.Label>Địa chỉ</Form.Label>
                   <Form.Control
                     type='text'
-                    placeholder='Enter address'
+                    placeholder='Nhập địa chỉ'
                     value={address}
                     required
                     onChange={(e) => setAddress(e.target.value)}
                   ></Form.Control>
                 </Form.Group>
 
-                <Form.Group controlId='city' className='py-2'>
-                  <Form.Label>City</Form.Label>
+                <Form.Group controlId='city' className='mb-3'>
+                  <Form.Label>Thành phố</Form.Label>
                   <Form.Control
                     type='text'
-                    placeholder='Enter city'
+                    placeholder='Nhập thành phố'
                     value={city}
                     required
                     onChange={(e) => setCity(e.target.value)}
                   ></Form.Control>
                 </Form.Group>
 
-                <Form.Group controlId='postalCode' className='py-2'>
-                  <Form.Label>Postal Code</Form.Label>
+                <Form.Group controlId='postalCode' className='mb-3'>
+                  <Form.Label>Mã bưu chính</Form.Label>
                   <Form.Control
                     type='text'
-                    placeholder='Enter postal code'
+                    placeholder='Nhập mã bưu chính'
                     value={postalCode}
                     required
                     onChange={(e) => setPostalCode(e.target.value)}
                   ></Form.Control>
                 </Form.Group>
 
-                <Form.Group controlId='country' className='py-2'>
-                  <Form.Label>Country</Form.Label>
+                <Form.Group controlId='country' className='mb-3'>
+                  <Form.Label>Quốc gia</Form.Label>
                   <Form.Control
                     type='text'
-                    placeholder='Enter country'
+                    placeholder='Nhập quốc gia'
                     value={country}
                     required
                     onChange={(e) => setCountry(e.target.value)}
@@ -84,7 +84,7 @@ const Shipping = () => {
                 </Form.Group>
 
                 <Button type='submit' variant='primary' className='mt-3'>
-                  Continue
+                  Tiếp tục
                 </Button>
               </Form>
             </Card.Body>

@@ -168,9 +168,26 @@
           "updatedAt": "2025-06-12T17:18:05.271Z",
           "product": "1750000000003",
           "qty": 1
+        },
+        {
+          "id": "1750000000002",
+          "name": "Laptop Acer Aspire 7 A715-42G",
+          "price": 17990000,
+          "category": "Laptop",
+          "brand": "Acer",
+          "countInStock": 8,
+          "description": "Acer Aspire 7 A715-42G R5-5500U, GTX 1650, 8GB, 512GB SSD, 15.6\" FHD",
+          "image": "/uploads/1749747083106-5387229.jpg",
+          "rating": 0,
+          "numReviews": 0,
+          "reviews": [],
+          "isFeatured": true,
+          "updatedAt": "2025-06-12T17:19:43.863Z",
+          "product": "1750000000002",
+          "qty": 1
         }
       ],
-      "updatedAt": "2025-06-12T17:35:41.044Z"
+      "updatedAt": "2025-06-12T17:52:44.937Z"
     }
   ]
 }
