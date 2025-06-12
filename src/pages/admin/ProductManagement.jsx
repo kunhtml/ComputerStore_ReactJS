@@ -380,6 +380,76 @@ const ProductManagement = () => {
     }
   };
 
+  // Edit existing category
+  const handleEditCategory = async (index) => {
+    const currentName = categories[index];
+    const newName = prompt('Nhập tên danh mục mới', currentName);
+    if (!newName || !newName.trim()) return;
+    if (categories.includes(newName) && newName !== currentName) {
+      alert('Danh mục này đã tồn tại');
+      return;
+    }
+    const updated = [...categories];
+    updated[index] = newName.trim();
+    try {
+      await axios.post(`${API_BASE}/categories`, { categories: updated });
+      setCategories(updated);
+      alert('Đã cập nhật danh mục thành công');
+    } catch (err) {
+      console.error('Error editing category:', err);
+      alert(err.response?.data?.error || 'Lỗi khi cập nhật danh mục');
+    }
+  };
+
+  // Delete category
+  const handleDeleteCategory = async (index) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa danh mục này?')) return;
+    const updated = categories.filter((_, i) => i !== index);
+    try {
+      await axios.post(`${API_BASE}/categories`, { categories: updated });
+      setCategories(updated);
+      alert('Đã xóa danh mục thành công');
+    } catch (err) {
+      console.error('Error deleting category:', err);
+      alert(err.response?.data?.error || 'Lỗi khi xóa danh mục');
+    }
+  };
+
+  // Edit brand
+  const handleEditBrand = async (index) => {
+    const currentName = brands[index];
+    const newName = prompt('Nhập tên thương hiệu mới', currentName);
+    if (!newName || !newName.trim()) return;
+    if (brands.includes(newName) && newName !== currentName) {
+      alert('Thương hiệu này đã tồn tại');
+      return;
+    }
+    const updated = [...brands];
+    updated[index] = newName.trim();
+    try {
+      await axios.post(`${API_BASE}/brands`, { brands: updated });
+      setBrands(updated);
+      alert('Đã cập nhật thương hiệu thành công');
+    } catch (err) {
+      console.error('Error editing brand:', err);
+      alert(err.response?.data?.error || 'Lỗi khi cập nhật thương hiệu');
+    }
+  };
+
+  // Delete brand
+  const handleDeleteBrand = async (index) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa thương hiệu này?')) return;
+    const updated = brands.filter((_, i) => i !== index);
+    try {
+      await axios.post(`${API_BASE}/brands`, { brands: updated });
+      setBrands(updated);
+      alert('Đã xóa thương hiệu thành công');
+    } catch (err) {
+      console.error('Error deleting brand:', err);
+      alert(err.response?.data?.error || 'Lỗi khi xóa thương hiệu');
+    }
+  };
+
   // Pagination
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const paginationItems = [];
@@ -657,6 +727,28 @@ const ProductManagement = () => {
                 placeholder="Nhập tên danh mục mới"
               />
             </Form.Group>
+            {/* Danh sách danh mục hiện có */}
+            {categories.length > 0 && (
+              <Table bordered hover size="sm">
+                <thead>
+                  <tr>
+                    <th>Danh mục</th>
+                    <th style={{ width: '120px' }}>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categories.map((c, idx) => (
+                    <tr key={idx}>
+                      <td>{c}</td>
+                      <td>
+                        <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleEditCategory(idx)}>Sửa</Button>
+                        <Button variant="outline-danger" size="sm" onClick={() => handleDeleteCategory(idx)}>Xóa</Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            )}
           </Form>
         </Modal.Body>
         <Modal.Footer>
@@ -683,6 +775,28 @@ const ProductManagement = () => {
                 placeholder="Nhập tên thương hiệu mới"
               />
             </Form.Group>
+            {/* Danh sách thương hiệu hiện có */}
+            {brands.length > 0 && (
+              <Table bordered hover size="sm">
+                <thead>
+                  <tr>
+                    <th>Thương hiệu</th>
+                    <th style={{ width: '120px' }}>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {brands.map((b, idx) => (
+                    <tr key={idx}>
+                      <td>{b}</td>
+                      <td>
+                        <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleEditBrand(idx)}>Sửa</Button>
+                        <Button variant="outline-danger" size="sm" onClick={() => handleDeleteBrand(idx)}>Xóa</Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            )}
           </Form>
         </Modal.Body>
         <Modal.Footer>
