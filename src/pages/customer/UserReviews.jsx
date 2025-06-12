@@ -3,10 +3,10 @@ import { Table, Button, Container, Row, Col, Card, Form, Modal } from "react-boo
 import { FaEdit, FaTrash, FaStar } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useNavigate, Link } from "react-router-dom";
-import { useAppContext } from "../context/AppContext";
-import Message from "../components/Message";
-import Loader from "../components/Loader";
-import Rating from "../components/Rating";
+import { useAppContext } from "../../context/AppContext";
+import Message from "../../components/Message";
+import Loader from "../../components/Loader";
+import Rating from "../../components/Rating";
 
 const UserReviews = () => {
   const [reviews, setReviews] = useState([]);
@@ -128,14 +128,12 @@ const UserReviews = () => {
       }
 
       const data = await response.json();
-      
-      // Update the review in local state
-      setReviews(reviews.map(review => 
-        review.id === currentReview.id 
-          ? { ...review, rating: Number(editRating), comment: editComment } 
-          : review
-      ));
-      
+
+      // Update local state
+      setReviews(reviews.map(review => (
+        review.id === currentReview.id ? data.review : review
+      )));
+
       toast.success("Review updated successfully");
       setShowEditModal(false);
     } catch (err) {
@@ -147,11 +145,7 @@ const UserReviews = () => {
 
   // Get product information by ID
   const getProductInfo = (productId) => {
-    const product = products.find(p => p.id === productId);
-    return {
-      name: product?.name || "Unknown Product",
-      image: product?.image || "https://via.placeholder.com/100x100?text=No+Image"
-    };
+    return products.find(product => product.id === productId) || {};
   };
 
   return (
@@ -176,9 +170,9 @@ const UserReviews = () => {
             const product = getProductInfo(review.productId);
             
             return (
-              <Col md={6} lg={4} className="mb-4" key={review.id}>
-                <Card className="h-100 shadow-sm">
-                  <Card.Header className="d-flex justify-content-between align-items-center bg-light">
+              <Col md={6} lg={4} key={review.id} className="mb-4">
+                <Card className="shadow-sm">
+                  <Card.Header className="d-flex justify-content-between align-items-center">
                     <div>
                       <Rating value={review.rating} text="" />
                     </div>
@@ -220,8 +214,7 @@ const UserReviews = () => {
                           </Link>
                         </h5>
                         <small className="text-muted">
-                          Reviewed on:{" "}
-                          {new Date(review.createdAt).toLocaleDateString()}
+                          Reviewed on: {new Date(review.createdAt).toLocaleDateString()}
                         </small>
                       </div>
                     </div>
@@ -287,4 +280,4 @@ const UserReviews = () => {
   );
 };
 
-export default UserReviews; 
+export default UserReviews;

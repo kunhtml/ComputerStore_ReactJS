@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Row, Col, ListGroup, Image, Card, ListGroupItem } from 'react-bootstrap';
-import Message from '../components/Message';
-import CheckoutSteps from '../components/CheckoutSteps';
+import Message from '../../components/Message';
+import CheckoutSteps from '../../components/CheckoutSteps';
 import { toast } from 'react-toastify';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext } from '../../context/AppContext';
 
 const PlaceOrder = () => {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ const PlaceOrder = () => {
   const addDecimals = (num) => {
     return (Math.round(num * 100) / 100).toFixed(2);
   };
-
+ 
   const itemsPrice = addDecimals(
     cartItems.reduce((acc, item) => acc + item.price * item.qty, 0)
   );
@@ -66,7 +66,7 @@ const PlaceOrder = () => {
         createdAt: new Date().toISOString(),
       };
       
-      // Save order to database.json through API
+      // Save order to backend API
       const response = await fetch('http://localhost:5678/api/orders', {
         method: 'POST',
         headers: {

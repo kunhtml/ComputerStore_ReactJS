@@ -25,14 +25,14 @@ const ProductDetail = React.lazy(() => import('./pages/ProductDetail'));
 const Cart = React.lazy(() => import('./pages/Cart'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Register = React.lazy(() => import('./pages/Register'));
-const Profile = React.lazy(() => import('./pages/Profile'));
+const Profile = React.lazy(() => import('./pages/customer/Profile'));
 const Shipping = React.lazy(() => import('./pages/Shipping'));
 const PaymentMethod = React.lazy(() => import('./pages/PaymentMethod'));
-const PlaceOrder = React.lazy(() => import('./pages/PlaceOrder'));
+const PlaceOrder = React.lazy(() => import('./pages/customer/PlaceOrder'));
 const Order = React.lazy(() => import('./pages/Order'));
 const OrderList = React.lazy(() => import('./pages/OrderList'));
 const UserDashboard = React.lazy(() => import('./pages/UserDashboard'));
-const UserReviews = React.lazy(() => import('./pages/UserReviews'));
+const UserReviews = React.lazy(() => import('./pages/customer/UserReviews'));
 
 // Loading component
 const Loading = () => (
@@ -203,8 +203,11 @@ function App() {
                   }
                 />
 
-                {/* Admin Routes */}
-                <Route path="/admin" element={<AdminLayout />}>
+                {/* Admin Routes (protected) */}
+                <Route
+                  path="/admin/*"
+                  element={<AdminRoute element={AdminLayout} />}
+                >
                   <Route index element={<AdminDashboard />} />
                   <Route path="orders" element={<OrderManagement />} />
                   <Route path="products" element={<ProductManagement />} />

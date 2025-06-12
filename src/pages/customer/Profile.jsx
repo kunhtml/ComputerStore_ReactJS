@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
 import { toast } from 'react-toastify';
-import Loader from '../components/Loader';
-import Message from '../components/Message';
+import Loader from '../../components/Loader';
+import Message from '../../components/Message';
 
 const Profile = ({ history }) => {
   const [name, setName] = useState('');
@@ -16,7 +16,7 @@ const Profile = ({ history }) => {
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null');
-    
+
     if (!userInfo) {
       history.push('/login');
     } else {
@@ -29,25 +29,24 @@ const Profile = ({ history }) => {
     e.preventDefault();
     setMessage('');
     setError('');
-    
+
     if (password && password !== confirmPassword) {
       setMessage('Mật khẩu xác nhận không khớp');
       return;
     }
-    
+
     try {
       setLoading(true);
-      // Xóa mọi fetch hoặc import database.json và logic liên quan database cũ
-      
-      // Cập nhật thông tin người dùng trong localStorage
+
+      // Update user information in localStorage
       const updatedUser = {
         ...JSON.parse(localStorage.getItem('userInfo') || '{}'),
         name,
-        email
+        email,
       };
-      
+
       localStorage.setItem('userInfo', JSON.stringify(updatedUser));
-      
+
       setSuccess(true);
       toast.success('Cập nhật thông tin thành công');
     } catch (err) {
@@ -70,47 +69,47 @@ const Profile = ({ history }) => {
           <Card>
             <Card.Body>
               <Form onSubmit={submitHandler}>
-                <Form.Group controlId='name'>
+                <Form.Group controlId="name">
                   <Form.Label>Name</Form.Label>
                   <Form.Control
-                    type='name'
-                    placeholder='Enter name'
+                    type="name"
+                    placeholder="Enter name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   ></Form.Control>
                 </Form.Group>
 
-                <Form.Group controlId='email' className='py-3'>
+                <Form.Group controlId="email" className="py-3">
                   <Form.Label>Email Address</Form.Label>
                   <Form.Control
-                    type='email'
-                    placeholder='Enter email'
+                    type="email"
+                    placeholder="Enter email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   ></Form.Control>
                 </Form.Group>
 
-                <Form.Group controlId='password'>
+                <Form.Group controlId="password">
                   <Form.Label>Password</Form.Label>
                   <Form.Control
-                    type='password'
-                    placeholder='Enter password'
+                    type="password"
+                    placeholder="Enter password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   ></Form.Control>
                 </Form.Group>
 
-                <Form.Group controlId='confirmPassword' className='py-3'>
+                <Form.Group controlId="confirmPassword" className="py-3">
                   <Form.Label>Confirm Password</Form.Label>
                   <Form.Control
-                    type='password'
-                    placeholder='Confirm password'
+                    type="password"
+                    placeholder="Confirm password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   ></Form.Control>
                 </Form.Group>
 
-                <Button type='submit' variant='primary' className='mt-3'>
+                <Button type="submit" variant="primary" className="mt-3">
                   Update
                 </Button>
               </Form>
