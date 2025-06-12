@@ -127,13 +127,17 @@ function App() {
               }
             />
 
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="products" element={<ProductManagement />} />
-              <Route path="users" element={<UserManagement />} />
-              <Route path="orders" element={<OrderManagement />} />
-            </Route>
+            {/* Admin Routes (protected) */}
+            <Route path="/admin/*" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="products" element={<ProductManagement />} />
+                  <Route path="users" element={<UserManagement />} />
+                  <Route path="orders" element={<OrderManagement />} />
+                </AdminLayout>
+              </AdminRoute>
+            } />
 
             {/* 404 Page */}
             <Route path="*" element={<Navigate to="/" replace />} />

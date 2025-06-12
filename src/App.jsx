@@ -56,7 +56,7 @@ const PrivateRoute = ({ element: Element, ...rest }) => {
 };
 
 // Admin route component
-const AdminRoute = ({ element: Element, ...rest }) => {
+const AdminRoute = ({ children, ...rest }) => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null');
   const location = useLocation();
   
@@ -68,7 +68,7 @@ const AdminRoute = ({ element: Element, ...rest }) => {
     return <Navigate to="/" replace />;
   }
   
-  return <Element {...rest} />;
+  return children;
 };
 
 function App() {
@@ -206,7 +206,11 @@ function App() {
                 {/* Admin Routes (protected) */}
                 <Route
                   path="/admin/*"
-                  element={<AdminRoute element={AdminLayout} />}
+                  element={
+                    <AdminRoute>
+                      <AdminLayout />
+                    </AdminRoute>
+                  }
                 >
                   <Route index element={<AdminDashboard />} />
                   <Route path="orders" element={<OrderManagement />} />
