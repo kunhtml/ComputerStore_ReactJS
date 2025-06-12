@@ -148,5 +148,29 @@
       "createdAt": "2025-05-20T14:54:41.051Z"
     }
   ],
-  "carts": []
+  "carts": [
+    {
+      "userId": "1684678944000",
+      "items": [
+        {
+          "id": "1750000000003",
+          "name": "Laptop Asus TUF Gaming F15 FX506HF",
+          "price": 20990000,
+          "category": "Laptop Gaming",
+          "brand": "Asus",
+          "countInStock": 6,
+          "description": "Asus TUF Gaming F15 FX506HF i5-11400H, RTX 2050, 8GB, 512GB SSD, 15.6\" 144Hz",
+          "image": "/uploads/1749747113667-160857612.jpg",
+          "rating": 0,
+          "numReviews": 0,
+          "reviews": [],
+          "isFeatured": true,
+          "updatedAt": "2025-06-12T17:18:05.271Z",
+          "product": "1750000000003",
+          "qty": 1
+        }
+      ],
+      "updatedAt": "2025-06-12T17:35:41.044Z"
+    }
+  ]
 }
