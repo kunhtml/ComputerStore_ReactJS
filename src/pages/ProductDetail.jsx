@@ -48,20 +48,20 @@ const ProductDetail = () => {
           setServerConnected(true);
         } catch (err) {
           setServerConnected(false);
-          setError("Server is not running. Please start the server first.");
+          setError("Server không hoạt động. Vui lòng khởi động server trước.");
           setLoading(false);
           return;
         }
         const response = await fetch(`http://localhost:5678/api/products/${id}`);
         const data = await response.json();
         if (!data.product) {
-          setError("Product not found");
+          setError("Không tìm thấy sản phẩm");
           setLoading(false);
           return;
         }
         setProduct(data.product);
       } catch (err) {
-        setError(err.message || "Failed to load product details");
+        setError(err.message || "Không thể tải thông tin sản phẩm");
       } finally {
         setLoading(false);
       }
@@ -83,7 +83,7 @@ const ProductDetail = () => {
         
         setReviews(data.reviews || []);
       } catch (err) {
-        setReviewsError("Failed to load reviews");
+        setReviewsError("Không thể tải đánh giá");
         console.error("Error fetching reviews:", err);
       } finally {
         setReviewsLoading(false);
@@ -95,7 +95,7 @@ const ProductDetail = () => {
 
   const addToCartHandler = () => {
     addToCart(product, Number(qty));
-    toast.success(`${product.name} added to cart`);
+    toast.success(`${product.name} đã thêm vào giỏ hàng`);
     navigate('/cart');
   };
 
@@ -136,16 +136,16 @@ const ProductDetail = () => {
       setRating(0);
       setComment("");
       
-      alert("Review submitted successfully");
+      alert("Đánh giá đã được gửi thành công");
     } catch (err) {
-      alert("Failed to submit review: " + (err.message || "Unknown error"));
+      alert("Không thể gửi đánh giá: " + (err.message || "Lỗi không xác định"));
     }
   };
 
   if (!serverConnected) {
     return (
       <Message variant="danger">
-        Server is not running. Please start the server first.
+        Server không hoạt động. Vui lòng khởi động server trước.
       </Message>
     );
   }
@@ -159,13 +159,13 @@ const ProductDetail = () => {
   }
 
   if (!product) {
-    return <Message variant="danger">Product not found</Message>;
+    return <Message variant="danger">Không tìm thấy sản phẩm</Message>;
   }
 
   return (
     <div>
       <Link className="btn btn-light my-3" to="/">
-        Go Back
+        Quay lại
       </Link>
       <Row>
         <Col md={6}>
@@ -179,12 +179,12 @@ const ProductDetail = () => {
             <ListGroupItem>
               <Rating
                 value={product.rating || 0}
-                text={`${product.numReviews || 0} reviews`}
+                text={`${product.numReviews || 0} đánh giá`}
               />
             </ListGroupItem>
-            <ListGroupItem>Price: {formatPrice(product.price)}</ListGroupItem>
+            <ListGroupItem>Giá: {formatPrice(product.price)}</ListGroupItem>
             <ListGroupItem>
-              Description: {product.description}
+              Mô tả: {product.description}
             </ListGroupItem>
           </ListGroup>
         </Col>
@@ -193,7 +193,7 @@ const ProductDetail = () => {
             <ListGroup variant="flush">
               <ListGroupItem>
                 <Row>
-                  <Col>Price:</Col>
+                  <Col>Giá:</Col>
                   <Col>
                     <strong>{formatPrice(product.price)}</strong>
                   </Col>
@@ -202,9 +202,9 @@ const ProductDetail = () => {
 
               <ListGroupItem>
                 <Row>
-                  <Col>Status:</Col>
+                  <Col>Trạng thái:</Col>
                   <Col>
-                    {product.countInStock > 0 ? "In Stock" : "Out Of Stock"}
+                    {product.countInStock > 0 ? "Còn hàng" : "Hết hàng"}
                   </Col>
                 </Row>
               </ListGroupItem>
@@ -212,7 +212,7 @@ const ProductDetail = () => {
               {product.countInStock > 0 && (
                 <ListGroupItem>
                   <Row>
-                    <Col>Qty</Col>
+                    <Col>Số lượng</Col>
                     <Col>
                       <Form.Control
                         as="select"
@@ -239,7 +239,7 @@ const ProductDetail = () => {
                   type="button"
                   disabled={product.countInStock === 0}
                 >
-                  Add To Cart
+                  Thêm vào giỏ hàng
                 </Button>
               </ListGroupItem>
             </ListGroup>
@@ -248,13 +248,13 @@ const ProductDetail = () => {
       </Row>
       <Row className="mt-4">
         <Col md={6}>
-          <h2>Reviews</h2>
+          <h2>Đánh giá</h2>
           {reviewsLoading ? (
             <Loader />
           ) : reviewsError ? (
             <Message variant="danger">{reviewsError}</Message>
           ) : reviews.length === 0 ? (
-            <Message>No Reviews</Message>
+            <Message>Chưa có đánh giá</Message>
           ) : (
             <ListGroup variant="flush">
               {reviews.map((review) => (
@@ -269,26 +269,26 @@ const ProductDetail = () => {
           )}
           
           <ListGroupItem className="mt-4">
-            <h2>Write a Customer Review</h2>
+            <h2>Viết đánh giá</h2>
             {userInfo ? (
               <Form onSubmit={submitHandler}>
                 <Form.Group controlId="rating">
-                  <Form.Label>Rating</Form.Label>
+                  <Form.Label>Đánh giá</Form.Label>
                   <Form.Control
                     as="select"
                     value={rating}
                     onChange={(e) => setRating(e.target.value)}
                   >
-                    <option value="">Select...</option>
-                    <option value="1">1 - Poor</option>
-                    <option value="2">2 - Fair</option>
-                    <option value="3">3 - Good</option>
-                    <option value="4">4 - Very Good</option>
-                    <option value="5">5 - Excellent</option>
+                    <option value="">Chọn...</option>
+                    <option value="1">1 - Kém</option>
+                    <option value="2">2 - Tạm được</option>
+                    <option value="3">3 - Tốt</option>
+                    <option value="4">4 - Rất tốt</option>
+                    <option value="5">5 - Xuất sắc</option>
                   </Form.Control>
                 </Form.Group>
                 <Form.Group controlId="comment">
-                  <Form.Label>Comment</Form.Label>
+                  <Form.Label>Nhận xét</Form.Label>
                   <Form.Control
                     as="textarea"
                     row="3"
@@ -302,12 +302,12 @@ const ProductDetail = () => {
                   variant="primary"
                   className="mt-3"
                 >
-                  Submit
+                  Gửi đánh giá
                 </Button>
               </Form>
             ) : (
               <Message>
-                Please <Link to="/login">sign in</Link> to write a review{" "}
+                Vui lòng <Link to="/login">đăng nhập</Link> để viết đánh giá{" "}
               </Message>
             )}
           </ListGroupItem>
