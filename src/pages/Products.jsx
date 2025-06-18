@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
-import { Row, Col, Card, Button, Form, Container } from "react-bootstrap";
+import { Row, Col, Card, Button, Form, Container, InputGroup } from "react-bootstrap";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -10,6 +10,7 @@ const Products = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [priceRange, setPriceRange] = useState(0);
   const [maxPrice, setMaxPrice] = useState(5000);
+  const [searchTerm, setSearchTerm] = useState("");
   const { keyword } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -81,21 +82,22 @@ const Products = () => {
     if (selectedCategory !== "all") {
       result = result.filter((product) => product.category === selectedCategory);
     }
-    if (keyword) {
-      const searchTerm = keyword.toLowerCase();
+    // Lọc theo từ khóa từ URL hoặc từ ô tìm kiếm
+    const searchQuery = (keyword || searchTerm).toLowerCase();
+    if (searchQuery) {
       result = result.filter(
         (product) =>
-          product.name.toLowerCase().includes(searchTerm) ||
-          product.description.toLowerCase().includes(searchTerm) ||
-          product.brand.toLowerCase().includes(searchTerm) ||
-          product.category.toLowerCase().includes(searchTerm)
+          product.name.toLowerCase().includes(searchQuery) ||
+          product.description.toLowerCase().includes(searchQuery) ||
+          product.brand.toLowerCase().includes(searchQuery) ||
+          product.category.toLowerCase().includes(searchQuery)
       );
     }
     if (priceRange < maxPrice) {
       result = result.filter((product) => product.price <= priceRange);
     }
     setFilteredProducts(result);
-  }, [products, selectedCategory, keyword, priceRange, maxPrice]);
+  }, [products, selectedCategory, keyword, searchTerm, priceRange, maxPrice]);
 
   // Xử lý thay đổi danh mục
   const handleCategoryChange = (e) => {
@@ -118,11 +120,43 @@ const Products = () => {
     setPriceRange(Number(e.target.value));
   };
 
+  // Xử lý tìm kiếm
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    // Không cần làm gì vì đã filter realtime
+  };
+
   return (
     <Container className="py-3">
       <h1 className="mb-4">Sản phẩm</h1>
+      
+      {/* Search bar */}
       <Row className="mb-4">
-        <Col md={4}>
+        <Col md={12}>
+          <Form onSubmit={handleSearchSubmit}>
+            <InputGroup>
+              <Form.Control
+                type="text"
+                placeholder="Nhập tên sản phẩm, từ khóa cần tìm..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="search-input"
+              />
+              <Button variant="primary" type="submit">
+                <i className="fas fa-search"></i> Tìm kiếm
+              </Button>
+            </InputGroup>
+          </Form>
+        </Col>
+      </Row>
+
+      {/* Filters */}
+      <Row className="mb-4">
+        <Col md={6}>
           <Form.Group>
             <Form.Label>Danh mục</Form.Label>
             <Form.Control
@@ -138,7 +172,7 @@ const Products = () => {
             </Form.Control>
           </Form.Group>
         </Col>
-        <Col md={4}>
+        <Col md={6}>
           <Form.Group>
             <Form.Label>Giá tối đa: {priceRange.toLocaleString('vi-VN')}₫</Form.Label>
             <Form.Range
