@@ -164,3 +164,28 @@ footer {
     --bs-text-opacity: 1;
     color: rgb(255 255 255 / 75%) !important;
 }
+
+/* Products Page Search Styles */
+.search-input {
+  border-radius: 4px 0 0 4px;
+  border-right: none;
+  padding: 10px 15px;
+  font-size: 16px;
+}
+
+.search-input:focus {
+  box-shadow: none;
+  border-color: #0d6efd;
+}
+
+.btn-primary i.fa-search {
+  margin-right: 5px;
+}
+
+/* Product filters responsive */
+@media (max-width: 768px) {
+  .search-input {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+}
