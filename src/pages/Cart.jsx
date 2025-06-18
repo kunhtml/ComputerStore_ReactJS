@@ -40,16 +40,16 @@ const Cart = () => {
           if (data.product) {
             // Product found, add to cart
             addToCart(data.product, qty);
-            toast.success(`${data.product.name} added to cart`);
+            toast.success(`${data.product.name} đã thêm vào giỏ hàng`);
             
             // Navigate back to cart without parameters to avoid adding again on refresh
             navigate('/cart', { replace: true });
           } else {
-            toast.error('Product not found');
+            toast.error('Không tìm thấy sản phẩm');
           }
         } catch (error) {
           console.error('Error adding product to cart:', error);
-          toast.error('Failed to add product to cart');
+          toast.error('Không thể thêm sản phẩm vào giỏ hàng');
         }
       };
       
@@ -59,18 +59,18 @@ const Cart = () => {
 
   const removeFromCartHandler = (id) => {
     removeFromCart(id);
-    toast.success("Item removed from cart");
+    toast.success("Đã xóa sản phẩm khỏi giỏ hàng");
   };
 
   const updateCartHandler = (product, qty) => {
     addToCart(product, qty);
-    toast.success("Cart updated");
+    toast.success("Đã cập nhật giỏ hàng");
   };
 
   const clearCartHandler = () => {
-    if (window.confirm("Are you sure you want to clear your cart?")) {
+    if (window.confirm("Bạn có chắc chắn muốn xóa toàn bộ giỏ hàng?")) {
       clearCart();
-      toast.success("Cart cleared successfully");
+      toast.success("Đã xóa giỏ hàng thành công");
     }
   };
 
@@ -85,10 +85,10 @@ const Cart = () => {
   return (
     <Row>
       <Col md={8}>
-        <h1>Shopping Cart</h1>
+        <h1>Giỏ hàng</h1>
         {cartItems.length === 0 ? (
           <div className="alert alert-info">
-            Your cart is empty <Link to="/">Go Back</Link>
+            Giỏ hàng của bạn đang trống <Link to="/">Quay lại</Link>
           </div>
         ) : (
           <>
@@ -98,7 +98,7 @@ const Cart = () => {
                 className="btn-sm"
                 onClick={clearCartHandler}
               >
-                <i className="fas fa-trash mr-2"></i> Clear Cart
+                <i className="fas fa-trash mr-2"></i> Xóa giỏ hàng
               </Button>
             </div>
             <ListGroup variant="flush">
@@ -150,8 +150,8 @@ const Cart = () => {
           <ListGroup variant="flush">
             <ListGroup.Item>
               <h2>
-                Subtotal ({cartItems.reduce((acc, item) => acc + item.qty, 0)})
-                items
+                 ({cartItems.reduce((acc, item) => acc + item.qty, 0)})
+                sản phẩm
               </h2>
               {formatPrice(
                 cartItems.reduce((acc, item) => acc + item.qty * item.price, 0)
@@ -164,7 +164,7 @@ const Cart = () => {
                 disabled={cartItems.length === 0}
                 onClick={checkoutHandler}
               >
-                Proceed To Checkout
+                Tiến hành thanh toán
               </Button>
             </ListGroup.Item>
           </ListGroup>

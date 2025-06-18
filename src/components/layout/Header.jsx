@@ -34,14 +34,14 @@ const Header = () => {
             <Nav className="ms-auto">
               {/* Always show Products link */}
               <LinkContainer to="/products">
-                <Nav.Link>Products</Nav.Link>
+                <Nav.Link>Sản phẩm</Nav.Link>
               </LinkContainer>
               
               {/* Only show Cart link for logged-in non-admin users */}
               {userInfo && !userInfo.isAdmin && (
                 <LinkContainer to="/cart">
                   <Nav.Link>
-                    <i className="fas fa-shopping-cart"></i> Cart
+                    <i className="fas fa-shopping-cart"></i> Giỏ hàng
                   </Nav.Link>
                 </LinkContainer>
               )}
@@ -51,27 +51,27 @@ const Header = () => {
                   {userInfo.isAdmin ? (
                     <>
                       <LinkContainer to="/admin">
-                        <NavDropdown.Item>Admin Panel</NavDropdown.Item>
+                        <NavDropdown.Item>Quản lý</NavDropdown.Item>
                       </LinkContainer>
                       <NavDropdown.Divider />
                       <NavDropdown.Item onClick={logoutHandler}>
-                        Logout
+                        Đăng xuất
                       </NavDropdown.Item>
                     </>
                   ) : (
                     <>
                       <LinkContainer to="/profile">
-                        <NavDropdown.Item>Profile</NavDropdown.Item>
+                        <NavDropdown.Item>Thông tin cá nhân</NavDropdown.Item>
                       </LinkContainer>
                       <LinkContainer to="/myorders">
-                        <NavDropdown.Item>My Orders</NavDropdown.Item>
+                        <NavDropdown.Item>Đơn hàng của tôi</NavDropdown.Item>
                       </LinkContainer>
                       <LinkContainer to="/user-reviews">
-                        <NavDropdown.Item>My Reviews</NavDropdown.Item>
+                        <NavDropdown.Item>Đánh giá của tôi</NavDropdown.Item>
                       </LinkContainer>
                       <NavDropdown.Divider />
                       <NavDropdown.Item onClick={logoutHandler}>
-                        Logout
+                        Đăng xuất
                       </NavDropdown.Item>
                     </>
                   )}

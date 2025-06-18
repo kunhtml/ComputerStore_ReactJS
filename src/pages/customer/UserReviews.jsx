@@ -152,7 +152,7 @@ const UserReviews = () => {
     <Container>
       <Row className="align-items-center mb-4">
         <Col>
-          <h1>My Reviews</h1>
+          <h1>Đánh giá của tôi</h1>
         </Col>
       </Row>
 
@@ -162,7 +162,7 @@ const UserReviews = () => {
         <Message variant="danger">{error}</Message>
       ) : reviews.length === 0 ? (
         <Message>
-          You haven't written any reviews yet. <Link to="/products">Shop now</Link> and share your thoughts!
+          Bạn chưa viết đánh giá nào. <Link to="/products">Mua sắm ngay</Link> và chia sẻ suy nghĩ của bạn!
         </Message>
       ) : (
         <Row>
