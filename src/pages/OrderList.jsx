@@ -94,11 +94,11 @@ const OrderList = () => {
                       <td>{Math.round(parseFloat(order.totalPrice || 0)).toLocaleString('vi-VN')}₫</td>
                       <td>
                         <Badge bg={getStatusColor(order.status)}>
-                          {order.status === 'pending' ? 'Chờ xử lý' :
-                           order.status === 'processing' ? 'Đang xử lý' :
-                           order.status === 'shipped' ? 'Đang giao' :
-                           order.status === 'delivered' ? 'Đã giao' :
-                           order.status === 'cancelled' ? 'Đã hủy' :
+                          {order.status?.toLowerCase() === 'pending' ? 'Chờ xử lý' :
+                           order.status?.toLowerCase() === 'processing' ? 'Đang xử lý' :
+                           order.status?.toLowerCase() === 'shipped' ? 'Đang giao' :
+                           order.status?.toLowerCase() === 'delivered' ? 'Đã giao' :
+                           order.status?.toLowerCase() === 'cancelled' ? 'Đã hủy' :
                            order.status || 'Chờ xử lý'}
                         </Badge>
                       </td>
