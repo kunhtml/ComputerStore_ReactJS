@@ -61,56 +61,56 @@ const Profile = ({ history }) => {
     <Container>
       <Row className="justify-content-md-center">
         <Col xs={12} md={6}>
-          <h2>User Profile</h2>
+          <h2>Thông tin cá nhân</h2>
           {message && <Message variant="danger">{message}</Message>}
           {error && <Message variant="danger">{error}</Message>}
-          {success && <Message variant="success">Profile Updated</Message>}
+          {success && <Message variant="success">Đã cập nhật thông tin</Message>}
           {loading && <Loader />}
           <Card>
             <Card.Body>
               <Form onSubmit={submitHandler}>
                 <Form.Group controlId="name">
-                  <Form.Label>Name</Form.Label>
+                  <Form.Label>Họ và tên</Form.Label>
                   <Form.Control
                     type="name"
-                    placeholder="Enter name"
+                    placeholder="Nhập họ và tên"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   ></Form.Control>
                 </Form.Group>
 
                 <Form.Group controlId="email" className="py-3">
-                  <Form.Label>Email Address</Form.Label>
+                  <Form.Label>Địa chỉ Email</Form.Label>
                   <Form.Control
                     type="email"
-                    placeholder="Enter email"
+                    placeholder="Nhập email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   ></Form.Control>
                 </Form.Group>
 
                 <Form.Group controlId="password">
-                  <Form.Label>Password</Form.Label>
+                  <Form.Label>Mật khẩu mới</Form.Label>
                   <Form.Control
                     type="password"
-                    placeholder="Enter password"
+                    placeholder="Nhập mật khẩu mới"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   ></Form.Control>
                 </Form.Group>
 
                 <Form.Group controlId="confirmPassword" className="py-3">
-                  <Form.Label>Confirm Password</Form.Label>
+                  <Form.Label>Xác nhận mật khẩu</Form.Label>
                   <Form.Control
                     type="password"
-                    placeholder="Confirm password"
+                    placeholder="Nhập lại mật khẩu mới"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   ></Form.Control>
                 </Form.Group>
 
                 <Button type="submit" variant="primary" className="mt-3">
-                  Update
+                  Cập nhật
                 </Button>
               </Form>
             </Card.Body>
