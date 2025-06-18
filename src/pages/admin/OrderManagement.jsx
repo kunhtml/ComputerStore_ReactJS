@@ -66,7 +66,7 @@ const OrderManagement = () => {
         setTotal(res.data.total || 0);
       } catch (err) {
         console.error('Error fetching orders:', err);
-        setError(`Cannot connect to server or fetch data. Error: ${err.message}`);
+        setError(`Không thể kết nối đến server hoặc lấy dữ liệu. Lỗi: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -90,7 +90,7 @@ const OrderManagement = () => {
     setSaving(true);
     try {
       await axios.put(`${API_BASE}/orders/${orderId}`, { status: newStatus });
-      toast.success('Order status updated');
+      toast.success('Đã cập nhật trạng thái đơn hàng');
       
       // Refetch orders
       const res = await axios.get(`${API_BASE}/orders`, { 
@@ -101,7 +101,7 @@ const OrderManagement = () => {
       closeModal();
     } catch (err) {
       console.error('Error updating status:', err);
-      toast.error(err.response?.data?.error || 'Error updating order status');
+      toast.error(err.response?.data?.error || 'Lỗi khi cập nhật trạng thái đơn hàng');
     } finally {
       setSaving(false);
     }
@@ -109,10 +109,10 @@ const OrderManagement = () => {
 
   // Delete order
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this order?')) return;
+    if (!window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) return;
     try {
       await axios.delete(`${API_BASE}/orders/${id}`);
-      toast.success('Order deleted');
+      toast.success('Đã xóa đơn hàng');
       
       // Refetch
       const res = await axios.get(`${API_BASE}/orders`, { 
@@ -122,7 +122,7 @@ const OrderManagement = () => {
       setTotal(res.data.total || 0);
     } catch (err) {
       console.error('Error deleting order:', err);
-      toast.error(err.response?.data?.error || 'Error deleting order');
+      toast.error(err.response?.data?.error || 'Lỗi khi xóa đơn hàng');
     }
   };
 
@@ -148,14 +148,14 @@ const OrderManagement = () => {
   return (
     <Container className="py-4">
       <Row className="mb-3 align-items-center">
-        <Col><h3>Order Management</h3></Col>
+        <Col><h3>Quản lý đơn hàng</h3></Col>
       </Row>
       
       <Row className="mb-3 g-2">
         <Col md={4}>
           <Form.Control
             type="text"
-            placeholder="Search by order ID or user..."
+            placeholder="Tìm kiếm theo mã đơn hàng hoặc khách hàng..."
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
           />
@@ -165,12 +165,12 @@ const OrderManagement = () => {
             value={status} 
             onChange={e => { setStatus(e.target.value); setPage(1); }}
           >
-            <option value="">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Processing">Processing</option>
-            <option value="Shipped">Shipped</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Cancelled">Cancelled</option>
+            <option value="">Tất cả trạng thái</option>
+            <option value="Pending">Chờ xử lý</option>
+            <option value="Processing">Đang xử lý</option>
+            <option value="Shipped">Đang giao</option>
+            <option value="Delivered">Đã giao</option>
+            <option value="Cancelled">Đã hủy</option>
           </Form.Select>
         </Col>
       </Row>
@@ -186,29 +186,34 @@ const OrderManagement = () => {
             <thead>
               <tr>
                 <th>#</th>
-                <th>Order ID</th>
-                <th>User</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
+                <th>Mã đơn hàng</th>
+                <th>Khách hàng</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th>Ngày đặt</th>
+                <th>Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {orders.length === 0 ? (
-                <tr><td colSpan={7} className="text-center">No orders found</td></tr>
+                <tr><td colSpan={7} className="text-center">Không tìm thấy đơn hàng</td></tr>
               ) : orders.map((order, idx) => (
                 <tr key={order.id}>
                   <td>{(page - 1) * PAGE_SIZE + idx + 1}</td>
                   <td>{order.id}</td>
                   <td>{order.userName || 'N/A'}</td>
-                  <td>${formatPrice(order.totalPrice || order.total || 0)}</td>
+                  <td>{Math.round(parseFloat(order.totalPrice || order.total || 0)).toLocaleString('vi-VN')}₫</td>
                   <td>
                     <span className={`badge bg-${getStatusColor(order.status)}`}>
-                      {order.status}
+                      {order.status === 'Pending' ? 'Chờ xử lý' :
+                       order.status === 'Processing' ? 'Đang xử lý' :
+                       order.status === 'Shipped' ? 'Đang giao' :
+                       order.status === 'Delivered' ? 'Đã giao' :
+                       order.status === 'Cancelled' ? 'Đã hủy' :
+                       order.status}
                     </span>
                   </td>
-                  <td>{new Date(order.createdAt).toLocaleString()}</td>
+                  <td>{new Date(order.createdAt).toLocaleString('vi-VN')}</td>
                   <td>
                     <Button 
                       size="sm" 
@@ -216,14 +221,14 @@ const OrderManagement = () => {
                       className="me-2" 
                       onClick={() => openViewModal(order)}
                     >
-                      View
+                      Xem
                     </Button>
                     <Button 
                       size="sm" 
                       variant="danger" 
                       onClick={() => handleDelete(order.id)}
                     >
-                      Delete
+                      Xóa
                     </Button>
                   </td>
                 </tr>
@@ -237,71 +242,76 @@ const OrderManagement = () => {
       {/* Order Details Modal */}
       <Modal show={showModal} onHide={closeModal} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>Order Details</Modal.Title>
+          <Modal.Title>Chi tiết đơn hàng</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {currentOrder && (
             <>
               <Row className="mb-3">
                 <Col md={6}>
-                  <h5>Order Information</h5>
-                  <p><strong>Order ID:</strong> {currentOrder.id}</p>
-                  <p><strong>Date:</strong> {new Date(currentOrder.createdAt).toLocaleString()}</p>
-                  <p><strong>Status:</strong> {currentOrder.status}</p>
-                  <p><strong>Total:</strong> ${formatPrice(currentOrder.totalPrice || currentOrder.total || 0)}</p>
+                  <h5>Thông tin đơn hàng</h5>
+                  <p><strong>Mã đơn hàng:</strong> {currentOrder.id}</p>
+                  <p><strong>Ngày đặt:</strong> {new Date(currentOrder.createdAt).toLocaleString('vi-VN')}</p>
+                  <p><strong>Trạng thái:</strong> {currentOrder.status === 'Pending' ? 'Chờ xử lý' :
+                                                   currentOrder.status === 'Processing' ? 'Đang xử lý' :
+                                                   currentOrder.status === 'Shipped' ? 'Đang giao' :
+                                                   currentOrder.status === 'Delivered' ? 'Đã giao' :
+                                                   currentOrder.status === 'Cancelled' ? 'Đã hủy' :
+                                                   currentOrder.status}</p>
+                  <p><strong>Tổng tiền:</strong> {Math.round(parseFloat(currentOrder.totalPrice || currentOrder.total || 0)).toLocaleString('vi-VN')}₫</p>
                 </Col>
                 <Col md={6}>
-                  <h5>Customer Information</h5>
-                  <p><strong>Name:</strong> {currentOrder.userName || 'N/A'}</p>
-                  <p><strong>Email:</strong> {currentOrder.userEmail || 'N/A'}</p>
+                  <h5>Thông tin khách hàng</h5>
+                  <p><strong>Tên:</strong> {currentOrder.userName || 'Không có'}</p>
+                  <p><strong>Email:</strong> {currentOrder.userEmail || 'Không có'}</p>
                 </Col>
               </Row>
-              <h5>Order Items</h5>
+              <h5>Sản phẩm đã đặt</h5>
               <Table striped bordered hover>
                 <thead>
                   <tr>
-                    <th>Product</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Subtotal</th>
+                    <th>Sản phẩm</th>
+                    <th>Giá</th>
+                    <th>Số lượng</th>
+                    <th>Thành tiền</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentOrder.orderItems && currentOrder.orderItems.length > 0 ? (
                     currentOrder.orderItems.map((item, idx) => (
                       <tr key={idx}>
-                        <td>{item.name || 'N/A'}</td>
-                        <td>${formatPrice(item.price)}</td>
+                        <td>{item.name || 'Không có'}</td>
+                        <td>{Math.round(parseFloat(item.price)).toLocaleString('vi-VN')}₫</td>
                         <td>{item.qty}</td>
-                        <td>${formatPrice(item.price * item.qty)}</td>
+                        <td>{Math.round(parseFloat(item.price * item.qty)).toLocaleString('vi-VN')}₫</td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="4" className="text-center">No items</td>
+                      <td colSpan="4" className="text-center">Không có sản phẩm</td>
                     </tr>
                   )}
                 </tbody>
               </Table>
               <Form.Group className="mb-3">
-                <Form.Label>Update Status</Form.Label>
+                <Form.Label>Cập nhật trạng thái</Form.Label>
                 <Form.Select
                   value={currentOrder.status}
                   onChange={(e) => handleStatusUpdate(currentOrder.id, e.target.value)}
                   disabled={saving}
                 >
-                  <option value="Pending">Pending</option>
-                  <option value="Processing">Processing</option>
-                  <option value="Shipped">Shipped</option>
-                  <option value="Delivered">Delivered</option>
-                  <option value="Cancelled">Cancelled</option>
+                  <option value="Pending">Chờ xử lý</option>
+                  <option value="Processing">Đang xử lý</option>
+                  <option value="Shipped">Đang giao</option>
+                  <option value="Delivered">Đã giao</option>
+                  <option value="Cancelled">Đã hủy</option>
                 </Form.Select>
               </Form.Group>
             </>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={closeModal}>Close</Button>
+          <Button variant="secondary" onClick={closeModal}>Đóng</Button>
           {saving && <Spinner animation="border" size="sm" />}
         </Modal.Footer>
       </Modal>
