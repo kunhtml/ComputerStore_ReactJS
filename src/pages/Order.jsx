@@ -73,7 +73,7 @@ const Order = () => {
       }
     } catch (err) {
       console.error('Error fetching order:', err);
-      setError('Error loading order');
+      setError('Lỗi khi tải đơn hàng');
     } finally {
       setLoading(false);
     }
@@ -150,17 +150,17 @@ const Order = () => {
       const updatedOrder = updatedOrders.find(o => o.id === orderId);
       setOrder(updatedOrder);
       
-      toast.success('Payment successful!');
+      toast.success('Thanh toán thành công!');
     } catch (err) {
       console.error('Error processing payment:', err);
-      toast.error('Error processing payment. Please try again.');
+      toast.error('Lỗi khi xử lý thanh toán. Vui lòng thử lại.');
     } finally {
       setLoadingPay(false);
     }
   };
 
   const deliverHandler = async () => {
-    if (!window.confirm('Are you sure you want to mark this order as delivered?')) {
+    if (!window.confirm('Bạn có chắc chắn muốn đánh dấu đơn hàng này đã giao?')) {
       return;
     }
     
@@ -198,10 +198,10 @@ const Order = () => {
       const updatedOrder = updatedOrders.find(o => o.id === orderId);
       setOrder(updatedOrder);
       
-      toast.success('Order marked as delivered');
+      toast.success('Đã đánh dấu đơn hàng là đã giao');
     } catch (err) {
       console.error('Error updating delivery status:', err);
-      toast.error('Error updating delivery status. Please try again.');
+      toast.error('Lỗi khi cập nhật trạng thái giao hàng. Vui lòng thử lại.');
     } finally {
       setLoadingDeliver(false);
     }
@@ -209,7 +209,7 @@ const Order = () => {
 
   // Function for admin to mark order as paid
   const markAsPaidHandler = async () => {
-    if (!window.confirm('Are you sure you want to mark this order as paid?')) {
+    if (!window.confirm('Bạn có chắc chắn muốn đánh dấu đơn hàng này đã thanh toán?')) {
       return;
     }
     
@@ -247,10 +247,10 @@ const Order = () => {
       const updatedOrder = updatedOrders.find(o => o.id === orderId);
       setOrder(updatedOrder);
       
-      toast.success('Order marked as paid');
+      toast.success('Đã đánh dấu đơn hàng là đã thanh toán');
     } catch (err) {
       console.error('Error marking as paid:', err);
-      toast.error('Error marking as paid. Please try again.');
+      toast.error('Lỗi khi đánh dấu đã thanh toán. Vui lòng thử lại.');
     } finally {
       setLoadingPay(false);
     }
@@ -263,80 +263,95 @@ const Order = () => {
       ) : error ? (
         <Message variant='danger'>{error}</Message>
       ) : !order ? (
-        <Message variant='danger'>Order not found</Message>
+        <Message variant='danger'>Không tìm thấy đơn hàng</Message>
       ) : (
         <>
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h1>Order {order.id}</h1>
+            <h1>Đơn hàng {order.id}</h1>
             <Button variant="secondary" onClick={() => navigate(-1)}>
-              <i className="fas fa-arrow-left me-2"></i>Back
+              <i className="fas fa-arrow-left me-2"></i>Quay lại
             </Button>
           </div>
-          <p className="text-muted small">Status updates automatically every 30 seconds. Last updated: {lastRefresh}</p>
+          <p className="text-muted small">Trạng thái đơn hàng tự động cập nhật mỗi 30 giây. Cập nhật lần cuối: {lastRefresh}</p>
           {order.status && (
-            <Message variant={order.status === 'Pending' ? 'warning' : order.status === 'Paid' ? 'success' : 'info'}>
-              Order Status: {order.status}
+            <Message variant={order.status?.toLowerCase() === 'pending' ? 'warning' : 
+                             order.status?.toLowerCase() === 'delivered' ? 'success' : 
+                             order.status?.toLowerCase() === 'paid' ? 'success' : 'info'}>
+              Trạng thái đơn hàng: {order.status?.toLowerCase() === 'pending' ? 'Chờ xử lý' :
+                                   order.status?.toLowerCase() === 'processing' ? 'Đang xử lý' :
+                                   order.status?.toLowerCase() === 'shipped' ? 'Đang giao' :
+                                   order.status?.toLowerCase() === 'delivered' ? 'Đã giao' :
+                                   order.status?.toLowerCase() === 'cancelled' ? 'Đã hủy' :
+                                   order.status?.toLowerCase() === 'paid' ? 'Đã thanh toán' :
+                                   order.status}
             </Message>
           )}
           <Row>
             <Col md={8}>
               <ListGroup variant='flush'>
                 <ListGroupItem>
-                  <h2>Shipping</h2>
+                  <h2>Thông tin giao hàng</h2>
                   <p>
-                    <strong>Name: </strong> {order.userName || 'N/A'}
+                    <strong>Tên: </strong> {order.userName || 'Không có'}
                   </p>
                   <p>
                     <strong>Email: </strong>{' '}
                     <a href={`mailto:${order.userEmail || ''}`}>
-                      {order.userEmail || 'N/A'}
+                      {order.userEmail || 'Không có'}
                     </a>
                   </p>
                   <p>
-                    <strong>Address: </strong>
+                    <strong>Địa chỉ: </strong>
                     {order.shippingAddress?.address}, {order.shippingAddress?.city}{' '}
                     {order.shippingAddress?.postalCode},{' '}
                     {order.shippingAddress?.country}
                   </p>
                   <p>
-                    <strong>Status: </strong>
+                    <strong>Trạng thái: </strong>
                     <span className={`badge bg-${
                       order.status?.toLowerCase() === 'delivered' ? 'success' :
                       order.status?.toLowerCase() === 'shipped' ? 'primary' :
                       order.status?.toLowerCase() === 'processing' ? 'info' :
                       order.status?.toLowerCase() === 'cancelled' ? 'danger' : 'warning'
                     }`}>
-                      {order.status || 'Pending'}
+                      {order.status?.toLowerCase() === 'pending' ? 'Chờ xử lý' :
+                       order.status?.toLowerCase() === 'processing' ? 'Đang xử lý' :
+                       order.status?.toLowerCase() === 'shipped' ? 'Đang giao' :
+                       order.status?.toLowerCase() === 'delivered' ? 'Đã giao' :
+                       order.status?.toLowerCase() === 'cancelled' ? 'Đã hủy' :
+                       order.status || 'Chờ xử lý'}
                     </span>
                   </p>
                   {order.isDelivered ? (
                     <Message variant='success'>
-                      Delivered on {new Date(order.deliveredAt).toLocaleDateString()}
+                      Đã giao vào ngày {new Date(order.deliveredAt).toLocaleDateString('vi-VN')}
                     </Message>
                   ) : (
-                    <Message variant='danger'>Not Delivered</Message>
+                    <Message variant='danger'>Chưa giao hàng</Message>
                   )}
                 </ListGroupItem>
 
                 <ListGroupItem>
-                  <h2>Payment Method</h2>
+                  <h2>Phương thức thanh toán</h2>
                   <p>
-                    <strong>Method: </strong>
-                    {order.paymentMethod || 'Not specified'}
+                    <strong>Phương thức: </strong>
+                    {order.paymentMethod === 'PayPal' ? 'PayPal' :
+                     order.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng' :
+                     order.paymentMethod || 'Chưa chỉ định'}
                   </p>
                   {order.isPaid ? (
                     <Message variant='success'>
-                      Paid on {new Date(order.paidAt).toLocaleDateString()}
+                      Đã thanh toán vào ngày {new Date(order.paidAt).toLocaleDateString('vi-VN')}
                     </Message>
                   ) : (
-                    <Message variant='danger'>Not Paid</Message>
+                    <Message variant='danger'>Chưa thanh toán</Message>
                   )}
                 </ListGroupItem>
 
                 <ListGroupItem>
-                  <h2>Order Items</h2>
+                  <h2>Sản phẩm đã đặt</h2>
                   {(!order.orderItems || order.orderItems.length === 0) ? (
-                    <Message>Order is empty</Message>
+                    <Message>Đơn hàng trống</Message>
                   ) : (
                     <ListGroup variant='flush'>
                       {order.orderItems.map((item, index) => (
@@ -356,7 +371,7 @@ const Order = () => {
                               </Link>
                             </Col>
                             <Col md={4}>
-                              {item.qty} x ${item.price} = ${(item.qty * item.price).toFixed(2)}
+                              {item.qty} x {Math.round(parseFloat(item.price || 0)).toLocaleString('vi-VN')}₫ = {Math.round(parseFloat((item.qty * item.price) || 0)).toLocaleString('vi-VN')}₫
                             </Col>
                           </Row>
                         </ListGroupItem>
@@ -370,30 +385,30 @@ const Order = () => {
               <Card>
                 <ListGroup variant='flush'>
                   <ListGroupItem>
-                    <h2>Order Summary</h2>
+                    <h2>Tóm tắt đơn hàng</h2>
                     <ListGroup variant='flush'>
                       <ListGroupItem>
                         <Row>
-                          <Col>Items:</Col>
-                          <Col>${order.itemsPrice}</Col>
+                          <Col>Sản phẩm:</Col>
+                          <Col>{Math.round(parseFloat(order.itemsPrice || 0)).toLocaleString('vi-VN')}₫</Col>
                         </Row>
                       </ListGroupItem>
                       <ListGroupItem>
                         <Row>
-                          <Col>Shipping:</Col>
-                          <Col>${order.shippingPrice}</Col>
+                          <Col>Phí vận chuyển:</Col>
+                          <Col>{Math.round(parseFloat(order.shippingPrice || 0)).toLocaleString('vi-VN')}₫</Col>
                         </Row>
                       </ListGroupItem>
                       <ListGroupItem>
                         <Row>
-                          <Col>Tax:</Col>
-                          <Col>${order.taxPrice}</Col>
+                          <Col>Thuế:</Col>
+                          <Col>{Math.round(parseFloat(order.taxPrice || 0)).toLocaleString('vi-VN')}₫</Col>
                         </Row>
                       </ListGroupItem>
                       <ListGroupItem>
                         <Row>
-                          <Col>Total:</Col>
-                          <Col>${order.totalPrice}</Col>
+                          <Col>Tổng cộng:</Col>
+                          <Col>{Math.round(parseFloat(order.totalPrice || 0)).toLocaleString('vi-VN')}₫</Col>
                         </Row>
                       </ListGroupItem>
                       {!order.isPaid && (
@@ -417,7 +432,7 @@ const Order = () => {
                             variant="success"
                             onClick={markAsPaidHandler}
                           >
-                            Mark As Paid
+                            Đánh dấu đã thanh toán
                           </Button>
                         </ListGroupItem>
                       )}
@@ -429,7 +444,7 @@ const Order = () => {
                             className='btn btn-block w-100'
                             onClick={deliverHandler}
                           >
-                            Mark As Delivered
+                            Đánh dấu đã giao hàng
                           </Button>
                         </ListGroupItem>
                       )}
